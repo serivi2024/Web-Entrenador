@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrenador Personal - Powerlifting y Estética</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- HEADER -->
+  <header class="bg-blue-600 text-white p-4 fixed w-full z-10 top-0 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-extrabold">TuNombreFit</h1>
+      <nav class="space-x-6 hidden md:block text-sm uppercase tracking-wide font-medium">
+        <a href="#sobre-mi" class="hover:underline">Sobre mí</a>
+        <a href="#servicios" class="hover:underline">Servicios</a>
+        <a href="#testimonios" class="hover:underline">Testimonios</a>
+        <a href="#blog" class="hover:underline">Blog</a>
+        <a href="#join-team" class="hover:underline">Únete</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="h-screen flex flex-col justify-center items-center bg-blue-50 text-center pt-16 px-4">
+    <h2 class="text-5xl font-bold mb-4">Alcanza tu máximo potencial</h2>
+    <p class="text-xl mb-6 max-w-xl">Entrenamiento personal para Powerlifting, mejora estética y transformación corporal. Personalizado y efectivo.</p>
+    <a href="#join-team" class="bg-blue-600 text-white px-8 py-4 rounded-full shadow-lg hover:bg-blue-700 transition">Únete a mi equipo</a>
+  </section>
+
+  <!-- SOBRE MÍ -->
+  <section id="sobre-mi" class="py-16 container mx-auto text-center px-4">
+    <h3 class="text-3xl font-bold mb-4">Sobre mí</h3>
+    <img src="https://via.placeholder.com/200" alt="Foto entrenador" class="mx-auto mb-6 rounded-full border-4 border-blue-600" />
+    <p class="max-w-2xl mx-auto text-lg leading-relaxed">Soy entrenador personal especializado en Powerlifting y estética corporal. Con años de experiencia y formación en el ámbito del fitness, mi objetivo es que consigas fuerza, técnica y un físico que te haga sentir bien. Entrenamiento profesional, adaptado a tu nivel y a tus metas.</p>
+  </section>
+
+  <!-- SERVICIOS -->
+  <section id="servicios" class="py-16 bg-gray-100 px-4">
+    <h3 class="text-3xl font-bold mb-8 text-center">Servicios</h3>
+    <div class="grid md:grid-cols-3 gap-8 container mx-auto text-center">
+      <div class="bg-white p-6 shadow rounded-lg hover:shadow-lg transition">
+        <h4 class="font-semibold text-xl mb-2">Powerlifting</h4>
+        <p class="text-gray-600">Planes personalizados para mejorar fuerza y técnica en sentadilla, banca y peso muerto.</p>
+      </div>
+      <div class="bg-white p-6 shadow rounded-lg hover:shadow-lg transition">
+        <h4 class="font-semibold text-xl mb-2">Estética</h4>
+        <p class="text-gray-600">Entrenamientos y nutrición enfocada en hipertrofia, recomposición corporal y definición muscular.</p>
+      </div>
+      <div class="bg-white p-6 shadow rounded-lg hover:shadow-lg transition">
+        <h4 class="font-semibold text-xl mb-2">Coaching Online</h4>
+        <p class="text-gray-600">Asesoría personalizada a distancia para que sigas progresando estés donde estés.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIOS -->
+  <section id="testimonios" class="py-16 container mx-auto px-4 text-center">
+    <h3 class="text-3xl font-bold mb-8">Testimonios</h3>
+    <div class="space-y-6 max-w-2xl mx-auto">
+      <blockquote class="bg-blue-50 p-6 rounded-lg shadow">“He superado mis marcas y mejorado mi técnica gracias a este gran coach.” — Cliente 1</blockquote>
+      <blockquote class="bg-blue-50 p-6 rounded-lg shadow">“Transformé mi físico y mi confianza con su plan. ¡Altamente recomendable!” — Cliente 2</blockquote>
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section id="blog" class="py-16 bg-gray-100 px-4">
+    <h3 class="text-3xl font-bold mb-8 text-center">Blog</h3>
+    <div class="grid md:grid-cols-3 gap-8 container mx-auto">
+      <article class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h4 class="font-semibold mb-2">Mejora tu banca</h4>
+        <p class="text-sm text-gray-600 mb-2">5 claves para aumentar tu press banca sin lesiones.</p>
+        <a href="#" class="text-blue-600 hover:underline text-sm">Leer más →</a>
+      </article>
+      <article class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h4 class="font-semibold mb-2">Nutrición para fuerza</h4>
+        <p class="text-sm text-gray-600 mb-2">Qué comer para rendir mejor en tus entrenamientos.</p>
+        <a href="#" class="text-blue-600 hover:underline text-sm">Leer más →</a>
+      </article>
+      <article class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <h4 class="font-semibold mb-2">Motivación constante</h4>
+        <p class="text-sm text-gray-600 mb-2">Cómo mantener la disciplina en etapas difíciles.</p>
+        <a href="#" class="text-blue-600 hover:underline text-sm">Leer más →</a>
+      </article>
+    </div>
+  </section>
+
+  <!-- ÚNETE AL EQUIPO -->
+  <section id="join-team" class="py-16 container mx-auto px-4">
+    <h3 class="text-3xl font-bold mb-6 text-center">Únete a mi equipo</h3>
+    <form class="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg space-y-4">
+      <input type="text" placeholder="Nombre" class="w-full p-3 border border-gray-300 rounded" required>
+      <input type="email" placeholder="Email" class="w-full p-3 border border-gray-300 rounded" required>
+      <textarea placeholder="Cuéntame tu objetivo y experiencia" class="w-full p-3 border border-gray-300 rounded"></textarea>
+      <button class="bg-blue-600 text-white p-3 rounded w-full hover:bg-blue-700 transition" type="submit">Enviar</button>
+    </form>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-blue-600 text-white p-6 mt-8 text-center">
+    <p>&copy; 2025 TuNombreFit | Sígueme en <a href="#" class="underline">Instagram</a></p>
+  </footer>
+
+</body>
+</html>
