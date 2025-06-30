@@ -67,9 +67,7 @@
           Publicar pregunta
         </button>
       </form>
-      <p class="mt-2 text-sm text-gray-500 italic" style="display:none;">
-        * Esta es una demo. Las preguntas no se guardan aún.
-      </p>
+      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
       <!-- Nota: Este párrafo se mantiene porque pediste NO eliminar ninguna línea -->
     </section>
 
@@ -165,11 +163,14 @@
   </footer>
 
   <script>
-    // Demo: prevenimos recarga y ya NO mostramos alerta de demo porque ahora guardamos en localStorage
+    // Demo: prevenir recarga y mostrar alert al enviar nueva pregunta
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
-      // Aquí ya no se muestra alert de demo, porque ahora sí se guarda en localStorage (función abajo)
+      alert('Gracias por tu pregunta. En esta demo aún no se guarda.');
+      this.reset();
     });
+
+    // Aquí puedes agregar funcionalidad para responder preguntas más adelante
   </script>
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
@@ -192,13 +193,20 @@
         const article = document.createElement('article');
         article.className = 'bg-white rounded-lg shadow p-6';
 
+        // Contar respuestas
+        const respuestasCount = pregunta.respuestas ? pregunta.respuestas.length : 0;
+        const mensajeRespuestas = respuestasCount === 0
+          ? 'Esta pregunta no tiene respuestas aún.'
+          : `Esta pregunta tiene ${respuestasCount} respuesta${respuestasCount > 1 ? 's' : ''}.`;
+
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
             <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
             <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
             <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
           </header>
-          <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
+          <p class="mb-2 text-gray-700">${pregunta.contenido}</p>
+          <p class="mb-4 italic text-sm text-gray-600">${mensajeRespuestas}</p>
           <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
             ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
               <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
@@ -265,44 +273,33 @@
     }
 
     // Guardar nueva pregunta desde el formulario
-    // Quitamos el listener duplicado del principio, y creamos este que guarda de verdad y recarga lista
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const autor = this.querySelector('#author').value.trim();
       const contenido = this.querySelector('#content').value.trim();
-
-      if (!autor || !contenido) {
-        alert('Por favor, rellena todos los campos de la pregunta.');
-        return;
-      }
+      if (!autor || !contenido) return alert('Debes rellenar todos los campos.');
 
       let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-
-      // Asumimos que el título es la primera frase o línea de contenido para esta demo
-      let titulo = contenido.split('.').shift() || contenido;
-
       preguntas.push({
+        titulo: contenido.split('\n')[0].substring(0, 50) || 'Pregunta sin título',
         autor,
         contenido,
-        titulo,
-        respuestas: [],
-        fecha: Date.now()
+        fecha: Date.now(),
+        respuestas: []
       });
-
       localStorage.setItem('preguntas', JSON.stringify(preguntas));
       this.reset();
-
-      alert('¡Tu pregunta ha sido guardada correctamente!');
       cargarPreguntas(document.getElementById('filtro').value);
     });
 
-    // Event listener para filtro de orden
+    // Cambiar filtro de orden
     document.getElementById('filtro').addEventListener('change', function() {
       cargarPreguntas(this.value);
     });
 
-    // Carga inicial
-    cargarPreguntas(document.getElementById('filtro').value);
+    // Inicializar carga de preguntas al cargar la página
+    cargarPreguntas();
   </script>
+
 </body>
 </html>
