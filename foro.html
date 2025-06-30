@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Comunidad Powerlifting - Preguntas y debates</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
+  
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
@@ -24,6 +24,7 @@
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
   </script>
+  
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
 
@@ -40,19 +41,110 @@
   </header>
 
   <main class="container mx-auto flex-grow px-4 py-8 max-w-4xl">
+
     <!-- NUEVA PREGUNTA -->
     <section class="mb-12 bg-white rounded-lg shadow p-6">
       <h2 class="text-2xl font-bold mb-4">Plantea tu duda o tema</h2>
       <form id="new-post-form" class="space-y-4">
-        <input type="text" id="author" placeholder="Tu nombre o nick" class="w-full p-3 border border-gray-300 rounded" required />
-        <textarea id="content" rows="4" placeholder="Describe tu duda, experiencia o tema para debate..." class="w-full p-3 border border-gray-300 rounded resize-y" required></textarea>
-        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition">Publicar pregunta</button>
+        <input
+          type="text"
+          id="author"
+          placeholder="Tu nombre o nick"
+          class="w-full p-3 border border-gray-300 rounded"
+          required
+        />
+        <textarea
+          id="content"
+          rows="4"
+          placeholder="Describe tu duda, experiencia o tema para debate..."
+          class="w-full p-3 border border-gray-300 rounded resize-y"
+          required
+        ></textarea>
+        <button
+          type="submit"
+          class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
+        >
+          Publicar pregunta
+        </button>
       </form>
-      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas se guardan en tu navegador.</p>
+      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
     </section>
 
     <!-- LISTADO DE PREGUNTAS -->
-    <section id="posts-list" class="space-y-8"></section>
+    <section id="posts-list" class="space-y-8">
+
+      <!-- Pregunta 1 -->
+      <article class="bg-white rounded-lg shadow p-6">
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">¿Cuál es la mejor técnica para mejorar la sentadilla?</h3>
+          <span class="text-sm text-gray-500">por <strong>AnaFit</strong></span>
+        </header>
+        <p class="mb-4 text-gray-700">
+          He estado entrenando sentadillas pero siento que no progreso. ¿Qué consejos o técnicas me recomiendan para mejorar la forma y fuerza?
+        </p>
+        <div class="space-y-4 border-t border-gray-200 pt-4">
+
+          <!-- Respuesta -->
+          <div class="bg-gray-100 rounded p-3">
+            <p><strong>EntrenadorPro:</strong> Enfócate en mantener el core activado y la barra estable. También, trabaja movilidad de cadera y tobillos.</p>
+          </div>
+          <div class="bg-gray-100 rounded p-3">
+            <p><strong>FitLover:</strong> Añade trabajo de sentadillas frontales y sentadillas con pausa para ganar control.</p>
+          </div>
+
+          <!-- Formulario de respuesta -->
+          <form class="mt-4 space-y-2">
+            <textarea
+              rows="2"
+              placeholder="Escribe tu respuesta..."
+              class="w-full p-2 border border-gray-300 rounded resize-y"
+              required
+            ></textarea>
+            <button
+              type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Responder
+            </button>
+          </form>
+        </div>
+      </article>
+
+      <!-- Pregunta 2 -->
+      <article class="bg-white rounded-lg shadow p-6">
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">¿Qué suplementos ayudan a mejorar la recuperación?</h3>
+          <span class="text-sm text-gray-500">por <strong>CarlosP</strong></span>
+        </header>
+        <p class="mb-4 text-gray-700">
+          Después de entrenar muy duro me cuesta recuperarme, ¿qué suplementos me recomiendan para acelerar la recuperación muscular?
+        </p>
+        <div class="space-y-4 border-t border-gray-200 pt-4">
+
+          <!-- Respuesta -->
+          <div class="bg-gray-100 rounded p-3">
+            <p><strong>NutriCoach:</strong> Proteína de suero, BCAA y creatina son buenos para recuperación y síntesis muscular.</p>
+          </div>
+
+          <!-- Formulario de respuesta -->
+          <form class="mt-4 space-y-2">
+            <textarea
+              rows="2"
+              placeholder="Escribe tu respuesta..."
+              class="w-full p-2 border border-gray-300 rounded resize-y"
+              required
+            ></textarea>
+            <button
+              type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Responder
+            </button>
+          </form>
+        </div>
+      </article>
+
+    </section>
   </main>
 
   <!-- FOOTER -->
@@ -61,31 +153,41 @@
   </footer>
 
   <script>
+    // Demo: prevenir recarga y mostrar alert al enviar nueva pregunta
+    document.getElementById('new-post-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Gracias por tu pregunta. En esta demo aún no se guarda.');
+      this.reset();
+    });
+
+    // Aquí puedes agregar funcionalidad para responder preguntas más adelante
+  </script>
+
+  <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER Y BORRAR --- -->
+  <script>
+    // Función para cargar preguntas y respuestas del localStorage
     function cargarPreguntas() {
       const postsList = document.getElementById('posts-list');
       postsList.innerHTML = '';
+
       let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
       preguntas.forEach((pregunta, idx) => {
         const article = document.createElement('article');
         article.className = 'bg-white rounded-lg shadow p-6';
 
-        const numRespuestas = pregunta.respuestas?.length || 0;
-        const respuestasTexto = numRespuestas === 0 ? '💬 Sin respuestas' : `💬 ${numRespuestas} respuesta${numRespuestas > 1 ? 's' : ''}`;
-
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
             <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-            <div class="text-sm text-gray-500 text-right">
-              <div>por <strong>${pregunta.autor}</strong></div>
-              <div>${respuestasTexto}</div>
-            </div>
+            <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+            <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
           </header>
           <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
           <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
-            ${pregunta.respuestas ? pregunta.respuestas.map(resp => `
-              <div class="bg-gray-100 rounded p-3">
+            ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
+              <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
                 <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+                <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold ml-4">[X]</button>
               </div>
             `).join('') : ''}
             <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
@@ -99,46 +201,83 @@
         postsList.appendChild(article);
       });
 
+      // Añadir event listeners a los formularios de respuesta
       document.querySelectorAll('.respuesta-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', e => {
           e.preventDefault();
-          const idx = this.dataset.index;
-          const nombre = this.querySelector('input').value.trim();
-          const texto = this.querySelector('textarea').value.trim();
-          if (!nombre || !texto) {
-            alert('Por favor completa ambos campos para responder.');
-            return;
-          }
+          const idx = parseInt(form.getAttribute('data-index'));
+          const autor = form.querySelector('input').value.trim();
+          const texto = form.querySelector('textarea').value.trim();
+          if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
+
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
           if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
-          preguntas[idx].respuestas.push({ autor: nombre, texto });
+          preguntas[idx].respuestas.push({ autor, texto });
           localStorage.setItem('preguntas', JSON.stringify(preguntas));
           cargarPreguntas();
         });
       });
+
+      // Añadir event listeners a botones borrar pregunta
+      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-index'));
+          if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
+            let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+            preguntas.splice(idx, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas();
+          }
+        });
+      });
+
+      // Añadir event listeners a botones borrar respuesta
+      document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-pregunta'));
+          const ridx = parseInt(btn.getAttribute('data-respuesta'));
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
+            if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
+              preguntas[idx].respuestas.splice(ridx, 1);
+              localStorage.setItem('preguntas', JSON.stringify(preguntas));
+              cargarPreguntas();
+            }
+          }
+        });
+      });
     }
 
-    cargarPreguntas();
-
+    // Guardar nueva pregunta desde el formulario
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const autor = this.querySelector('#author').value.trim();
       const contenido = this.querySelector('#content').value.trim();
+
       if (!autor || !contenido) {
-        alert('Por favor completa todos los campos.');
+        alert('Por favor, rellena todos los campos de la pregunta.');
         return;
       }
+
       let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      preguntas.unshift({
-        titulo: contenido.length > 50 ? contenido.substring(0, 50) + '...' : contenido,
+
+      // Asumimos que el título es la primera frase o línea de contenido para esta demo
+      let titulo = contenido.split('.').shift() || contenido;
+
+      preguntas.push({
         autor,
         contenido,
+        titulo,
         respuestas: []
       });
+
       localStorage.setItem('preguntas', JSON.stringify(preguntas));
       this.reset();
       cargarPreguntas();
     });
+
+    // Carga inicial
+    cargarPreguntas();
   </script>
 </body>
 </html>
