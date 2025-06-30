@@ -169,11 +169,11 @@
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
   <script>
   // Función para cargar preguntas y respuestas del localStorage
-  function cargarPreguntas(filtro = 'mas_recientes') {
-    const postsList = document.getElementById('posts-list');
-    postsList.innerHTML = '';
+ function cargarPreguntas(filtro = 'mas_recientes') {
+  const postsList = document.getElementById('posts-list');
+  postsList.innerHTML = '';
 
-    // let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+  let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
     // Ordenar según filtro
     if (filtro === 'mas_recientes') {
