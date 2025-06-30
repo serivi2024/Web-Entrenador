@@ -175,131 +175,139 @@
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
   <script>
-    // Función para cargar preguntas y respuestas del localStorage
-    function cargarPreguntas(filtro = 'mas_recientes') {
-      const postsList = document.getElementById('posts-list');
-      postsList.innerHTML = '';
+  // Función para cargar preguntas y respuestas del localStorage
+  function cargarPreguntas(filtro = 'mas_recientes') {
+    const postsList = document.getElementById('posts-list');
+    postsList.innerHTML = '';
 
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
-      // Ordenar según filtro
-      if (filtro === 'mas_recientes') {
-        preguntas.sort((a, b) => b.fecha - a.fecha);
-      } else if (filtro === 'mas_antiguas') {
-        preguntas.sort((a, b) => a.fecha - b.fecha);
-      }
+    // Ordenar según filtro
+    if (filtro === 'mas_recientes') {
+      preguntas.sort((a, b) => b.fecha - a.fecha);
+    } else if (filtro === 'mas_antiguas') {
+      preguntas.sort((a, b) => a.fecha - b.fecha);
+    }
 
-      preguntas.forEach((pregunta, idx) => {
-        const article = document.createElement('article');
-        article.className = 'bg-white rounded-lg shadow p-6';
+    preguntas.forEach((pregunta, idx) => {
+      const article = document.createElement('article');
+      article.className = 'bg-white rounded-lg shadow p-6';
 
-        // Contar respuestas
-        const respuestasCount = pregunta.respuestas ? pregunta.respuestas.length : 0;
-        const mensajeRespuestas = respuestasCount === 0
-          ? 'Esta pregunta no tiene respuestas aún.'
-          : `Esta pregunta tiene ${respuestasCount} respuesta${respuestasCount > 1 ? 's' : ''}.`;
+      const totalRespuestas = pregunta.respuestas ? pregunta.respuestas.length : 0;
+      const respuestasTexto = totalRespuestas === 0
+        ? `<span class="flex items-center text-gray-500 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.931L3 20l1.931-4.745A7.963 7.963 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Sin respuestas</span>`
+        : `<span class="flex items-center text-gray-700 text-sm font-medium"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.931L3 20l1.931-4.745A7.963 7.963 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>${totalRespuestas} respuesta${totalRespuestas > 1 ? 's' : ''}</span>`;
 
-        article.innerHTML = `
-          <header class="mb-4 flex justify-between items-center">
-            <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-            <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
-            <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
-          </header>
-          <p class="mb-2 text-gray-700">${pregunta.contenido}</p>
-          <p class="mb-4 italic text-sm text-gray-600">${mensajeRespuestas}</p>
-          <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
-            ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
-              <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
-                <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
-                <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold ml-4">[X]</button>
-              </div>
-            `).join('') : ''}
-            <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
-              <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
-              <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
-              <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
-            </form>
-          </div>
-        `;
+      article.innerHTML = `
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+          <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+          <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
+        </header>
+        <p class="mb-2 text-gray-700">${pregunta.contenido}</p>
+        <div class="mb-4">${respuestasTexto}</div>
+        <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
+          ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
+            <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
+              <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+              <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold ml-4">[X]</button>
+            </div>
+          `).join('') : ''}
+          <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
+            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+          </form>
+        </div>
+      `;
 
-        postsList.appendChild(article);
+      postsList.appendChild(article);
+    });
+
+    // Event listeners para respuestas
+    document.querySelectorAll('.respuesta-form').forEach(form => {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const idx = parseInt(form.getAttribute('data-index'));
+        const autor = form.querySelector('input').value.trim();
+        const texto = form.querySelector('textarea').value.trim();
+        if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
+        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
+        preguntas[idx].respuestas.push({ autor, texto });
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+        cargarPreguntas(filtro);
       });
+    });
 
-      // Añadir event listeners a los formularios de respuesta
-      document.querySelectorAll('.respuesta-form').forEach(form => {
-        form.addEventListener('submit', e => {
-          e.preventDefault();
-          const idx = parseInt(form.getAttribute('data-index'));
-          const autor = form.querySelector('input').value.trim();
-          const texto = form.querySelector('textarea').value.trim();
-          if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
-
+    // Botón borrar pregunta
+    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-index'));
+        if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
-          preguntas[idx].respuestas.push({ autor, texto });
+          preguntas.splice(idx, 1);
           localStorage.setItem('preguntas', JSON.stringify(preguntas));
           cargarPreguntas(filtro);
-        });
+        }
       });
+    });
 
-      // Añadir event listeners a botones borrar pregunta
-      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-index'));
-          if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
-            let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-            preguntas.splice(idx, 1);
+    // Botón borrar respuesta
+    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-pregunta'));
+        const ridx = parseInt(btn.getAttribute('data-respuesta'));
+        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
+          if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
+            preguntas[idx].respuestas.splice(ridx, 1);
             localStorage.setItem('preguntas', JSON.stringify(preguntas));
             cargarPreguntas(filtro);
           }
-        });
+        }
       });
+    });
+  }
 
-      // Añadir event listeners a botones borrar respuesta
-      document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-pregunta'));
-          const ridx = parseInt(btn.getAttribute('data-respuesta'));
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
-            if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
-              preguntas[idx].respuestas.splice(ridx, 1);
-              localStorage.setItem('preguntas', JSON.stringify(preguntas));
-              cargarPreguntas(filtro);
-            }
-          }
-        });
-      });
+  // Guardar nueva pregunta desde el formulario
+  document.getElementById('new-post-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const autor = this.querySelector('#author').value.trim();
+    const contenido = this.querySelector('#content').value.trim();
+
+    if (!autor || !contenido) {
+      alert('Por favor, rellena todos los campos de la pregunta.');
+      return;
     }
 
-    // Guardar nueva pregunta desde el formulario
-    document.getElementById('new-post-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const autor = this.querySelector('#author').value.trim();
-      const contenido = this.querySelector('#content').value.trim();
-      if (!autor || !contenido) return alert('Debes rellenar todos los campos.');
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      preguntas.push({
-        titulo: contenido.split('\n')[0].substring(0, 50) || 'Pregunta sin título',
-        autor,
-        contenido,
-        fecha: Date.now(),
-        respuestas: []
-      });
-      localStorage.setItem('preguntas', JSON.stringify(preguntas));
-      this.reset();
-      cargarPreguntas(document.getElementById('filtro').value);
+    let titulo = contenido.split('.').shift() || contenido;
+
+    preguntas.push({
+      autor,
+      contenido,
+      titulo,
+      respuestas: [],
+      fecha: Date.now()
     });
 
-    // Cambiar filtro de orden
-    document.getElementById('filtro').addEventListener('change', function() {
-      cargarPreguntas(this.value);
-    });
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    this.reset();
 
-    // Inicializar carga de preguntas al cargar la página
-    cargarPreguntas();
-  </script>
+    alert('¡Tu pregunta ha sido guardada correctamente!');
+    cargarPreguntas(document.getElementById('filtro').value);
+  });
+
+  // Event listener para filtro de orden
+  document.getElementById('filtro').addEventListener('change', function() {
+    cargarPreguntas(this.value);
+  });
+
+  // Carga inicial
+  cargarPreguntas(document.getElementById('filtro').value);
+</script>
 
 </body>
 </html>
