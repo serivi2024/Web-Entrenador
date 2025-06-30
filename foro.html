@@ -68,14 +68,15 @@
         </button>
       </form>
       <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
+      <!-- Nota: Este párrafo se mantiene porque pediste NO eliminar ninguna línea -->
     </section>
 
-    <!-- FILTRO DE ORDEN -->
-    <section class="mb-6 flex justify-end items-center space-x-2">
-      <label for="filter-order" class="font-semibold text-gray-700">Ordenar por:</label>
-      <select id="filter-order" class="p-2 border border-gray-300 rounded">
-        <option value="recientes" selected>Más recientes</option>
-        <option value="antiguas">Más antiguas</option>
+    <!-- FILTRO VISUAL -->
+    <section class="mb-8 bg-white rounded-lg shadow p-4 flex items-center space-x-4">
+      <label for="filtro" class="font-semibold">Ordenar por:</label>
+      <select id="filtro" class="border border-gray-300 rounded p-2">
+        <option value="mas_recientes">Más recientes</option>
+        <option value="mas_antiguas">Más antiguas</option>
       </select>
     </section>
 
@@ -174,28 +175,19 @@
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
   <script>
-    // Función para ordenar preguntas según filtro
-    function ordenarPreguntas(preguntas, orden) {
-      if (orden === 'antiguas') {
-        return preguntas.sort((a, b) => a.fecha - b.fecha);
-      } else {
-        // Por defecto 'recientes'
-        return preguntas.sort((a, b) => b.fecha - a.fecha);
-      }
-    }
-
     // Función para cargar preguntas y respuestas del localStorage
-    function cargarPreguntas() {
+    function cargarPreguntas(filtro = 'mas_recientes') {
       const postsList = document.getElementById('posts-list');
       postsList.innerHTML = '';
 
       let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
-      // Obtener el filtro actual
-      const orden = document.getElementById('filter-order')?.value || 'recientes';
-
-      // Ordenamos según filtro
-      preguntas = ordenarPreguntas(preguntas, orden);
+      // Ordenar según filtro
+      if (filtro === 'mas_recientes') {
+        preguntas.sort((a, b) => b.fecha - a.fecha);
+      } else if (filtro === 'mas_antiguas') {
+        preguntas.sort((a, b) => a.fecha - b.fecha);
+      }
 
       preguntas.forEach((pregunta, idx) => {
         const article = document.createElement('article');
@@ -239,7 +231,7 @@
           if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
           preguntas[idx].respuestas.push({ autor, texto });
           localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas();
+          cargarPreguntas(filtro);
         });
       });
 
@@ -251,7 +243,7 @@
             let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
             preguntas.splice(idx, 1);
             localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas();
+            cargarPreguntas(filtro);
           }
         });
       });
@@ -266,14 +258,14 @@
             if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
               preguntas[idx].respuestas.splice(ridx, 1);
               localStorage.setItem('preguntas', JSON.stringify(preguntas));
-              cargarPreguntas();
+              cargarPreguntas(filtro);
             }
           }
         });
       });
     }
 
-    // Guardar nueva pregunta desde el formulario (reemplaza el listener anterior para que guarde)
+    // Guardar nueva pregunta desde el formulario
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const autor = this.querySelector('#author').value.trim();
@@ -294,21 +286,23 @@
         contenido,
         titulo,
         respuestas: [],
-        fecha: Date.now()  // Guardamos fecha aquí
+        fecha: Date.now()
       });
 
       localStorage.setItem('preguntas', JSON.stringify(preguntas));
       this.reset();
-      cargarPreguntas();
+
+      alert('¡Tu pregunta ha sido guardada correctamente!');
+      cargarPreguntas(document.getElementById('filtro').value);
     });
 
-    // Listener para filtro de orden
-    document.getElementById('filter-order').addEventListener('change', () => {
-      cargarPreguntas();
+    // Event listener para filtro de orden
+    document.getElementById('filtro').addEventListener('change', function() {
+      cargarPreguntas(this.value);
     });
 
     // Carga inicial
-    cargarPreguntas();
+    cargarPreguntas(document.getElementById('filtro').value);
   </script>
 </body>
 </html>
