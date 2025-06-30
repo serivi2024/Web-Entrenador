@@ -8,6 +8,28 @@
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
 
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
+  authDomain: "sergiopowercoach-foro.firebaseapp.com",
+  projectId: "sergiopowercoach-foro",
+  storageBucket: "sergiopowercoach-foro.firebasestorage.app",
+  messagingSenderId: "571520460029",
+  appId: "1:571520460029:web:2c942e15addfe92d164a94",
+  measurementId: "G-18K2P3CEZS"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
   <!-- HEADER SIMPLE -->
   <header class="bg-blue-600 text-white p-4 sticky top-0 shadow-md z-20">
     <div class="container mx-auto flex justify-between items-center">
