@@ -197,7 +197,6 @@
           <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
           <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
         </header>
-        <p class="mb-2 text-gray-700">${pregunta.contenido}</p>
         <div class="mb-4">${respuestasTexto}</div>
         <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
           ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
