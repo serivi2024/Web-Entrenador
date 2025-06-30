@@ -161,6 +161,93 @@
     });
 
     // Aquí puedes agregar funcionalidad para responder preguntas más adelante
+    <script>
+  // Función para cargar preguntas del localStorage
+  function cargarPreguntas() {
+    const postsList = document.getElementById('posts-list');
+    postsList.innerHTML = '';
+
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+
+    preguntas.forEach((pregunta, idx) => {
+      const article = document.createElement('article');
+      article.className = 'bg-white rounded-lg shadow p-6';
+
+      article.innerHTML = `
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+          <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+        </header>
+        <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
+        <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
+          ${pregunta.respuestas ? pregunta.respuestas.map(resp => `
+            <div class="bg-gray-100 rounded p-3">
+              <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+            </div>
+          `).join('') : ''}
+          <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
+            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+          </form>
+        </div>
+      `;
+
+      postsList.appendChild(article);
+    });
+
+    // Añadir event listeners a los formularios de respuesta que se acaban de crear
+    document.querySelectorAll('.respuesta-form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const idx = this.dataset.index;
+        const nombre = this.querySelector('input').value.trim();
+        const texto = this.querySelector('textarea').value.trim();
+        if (!nombre || !texto) {
+          alert('Por favor completa ambos campos para responder.');
+          return;
+        }
+
+        // Añadir respuesta a la pregunta en localStorage
+        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (!preguntas[idx].respuestas) {
+          preguntas[idx].respuestas = [];
+        }
+        preguntas[idx].respuestas.push({ autor: nombre, texto: texto });
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+
+        // Recargar preguntas para mostrar la nueva respuesta
+        cargarPreguntas();
+      });
+    });
+  }
+
+  // Al cargar la página, mostrar las preguntas guardadas
+  cargarPreguntas();
+
+  // Manejar formulario de nueva pregunta
+  document.getElementById('new-post-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const autor = this.querySelector('#author').value.trim();
+    const contenido = this.querySelector('#content').value.trim();
+    if (!autor || !contenido) {
+      alert('Por favor completa todos los campos.');
+      return;
+    }
+
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    preguntas.unshift({
+      titulo: contenido.length > 50 ? contenido.substring(0, 50) + '...' : contenido,
+      autor: autor,
+      contenido: contenido,
+      respuestas: []
+    });
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+
+    this.reset();
+    cargarPreguntas();
+  });
+</script>
   </script>
 </body>
 </html>
