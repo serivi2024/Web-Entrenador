@@ -167,175 +167,161 @@
   </script>
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
-  <script>
-  // Función para cargar preguntas y respuestas del localStorage
- function cargarPreguntas(filtro = 'mas_recientes') {
-  const postsList = document.getElementById('posts-list');
-  postsList.innerHTML = '';
+ <script>
+  function cargarPreguntas(filtro = 'mas_recientes') {
+    const postsList = document.getElementById('posts-list');
+    postsList.innerHTML = '';
 
-  let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
-  if (filtro === 'mas_recientes') {
-    preguntas.sort((a, b) => b.fecha - a.fecha);
-  } else if (filtro === 'mas_antiguas') {
-    preguntas.sort((a, b) => a.fecha - b.fecha);
-  }
+    // Ordenar según filtro
+    if (filtro === 'mas_recientes') {
+      preguntas.sort((a, b) => b.fecha - a.fecha);
+    } else {
+      preguntas.sort((a, b) => a.fecha - b.fecha);
+    }
 
-  preguntas.forEach((pregunta, idx) => {
-    // ... tu código para crear article.innerHTML sigue igual ...
-  });
+    preguntas.forEach((pregunta, idx) => {
+      const respuestas = pregunta.respuestas || [];
 
-  // Event listeners para respuestas (formulario de respuesta)
-  document.querySelectorAll('.respuesta-form').forEach(form => {
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      // ... tu código de agregar respuesta ...
-    });
-  });
-
-  // Event listeners para botones borrar (deben ir aquí, dentro de cargarPreguntas)
-  document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.getAttribute('data-index'));
-      if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
-        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-        preguntas.splice(idx, 1);
-        localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(filtro);
-      }
-    });
-  });
-
-  document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const idx = parseInt(btn.getAttribute('data-pregunta'));
-      const ridx = parseInt(btn.getAttribute('data-respuesta'));
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
-        if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
-          preguntas[idx].respuestas.splice(ridx, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(filtro);
-        }
-      }
-    });
-  });
-}
-
+      const article = document.createElement('article');
+      article.className = 'bg-white rounded-lg shadow p-6';
+      article.innerHTML = `
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+          <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+        </header>
+        <p class="mb-2 text-gray-700">${pregunta.contenido}</p>
+        <div class="flex items-center gap-4 text-sm mb-4">
+          <button class="btn-like-pregunta text-blue-600 hover:underline" data-index="${idx}">👍 Me gusta (${pregunta.likes || 0})</button>
+          <span class="text-gray-600">💬 ${respuestas.length} respuestas</span>
+          <button class="btn-borrar-pregunta text-red-500 hover:underline" data-index="${idx}">🗑 Borrar</button>
+        </div>
+        <div class="space-y-4 border-t border-gray-200 pt-4">
+          ${respuestas.map((respuesta, ridx) => `
+            <div class="bg-gray-100 rounded p-3">
+              <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
+              <div class="flex items-center gap-3 text-sm mt-2">
+                <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta="${idx}" data-respuesta="${ridx}">👍 Me gusta (${respuesta.likes || 0})</button>
+                <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta="${idx}" data-respuesta="${ridx}">🗑 Borrar</button>
+              </div>
+            </div>
+          `).join('')}
+          <form class="respuesta-form mt-4 space-y-2" data-index="${idx}">
+            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required>
+            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+          </form>
+        </div>
+      `;
       postsList.appendChild(article);
     });
 
-    // Event listeners para respuestas
+    // --- EVENTOS POR CADA CARGA ---
+
+    // 1. Enviar respuesta
     document.querySelectorAll('.respuesta-form').forEach(form => {
       form.addEventListener('submit', e => {
         e.preventDefault();
         const idx = parseInt(form.getAttribute('data-index'));
         const autor = form.querySelector('input').value.trim();
         const texto = form.querySelector('textarea').value.trim();
-        if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
+        if (!autor || !texto) return alert('Debes rellenar todos los campos.');
         let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-        if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
+        preguntas[idx].respuestas = preguntas[idx].respuestas || [];
         preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
         localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(filtro);
+        cargarPreguntas(document.getElementById('filtro').value);
       });
     });
-// Variable global para las preguntas, para manejar likes y demás
-let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
-// Listener para like de preguntas y respuestas
-document.addEventListener('click', (e) => {
-  // Like pregunta
-  if (e.target.closest('.btn-like-pregunta')) {
-    const btn = e.target.closest('.btn-like-pregunta');
-    const idx = btn.getAttribute('data-index');
-    preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
-    localStorage.setItem('preguntas', JSON.stringify(preguntas));
-    cargarPreguntas(document.getElementById('filtro').value);
+    // 2. Borrar pregunta
+    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-index'));
+        if (confirm('¿Seguro que deseas borrar esta pregunta y sus respuestas?')) {
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          preguntas.splice(idx, 1);
+          localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          cargarPreguntas(document.getElementById('filtro').value);
+        }
+      });
+    });
+
+    // 3. Borrar respuesta
+    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = parseInt(btn.getAttribute('data-pregunta'));
+        const rid = parseInt(btn.getAttribute('data-respuesta'));
+        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (preguntas[pid] && preguntas[pid].respuestas && preguntas[pid].respuestas[rid]) {
+          if (confirm('¿Seguro que deseas borrar esta respuesta?')) {
+            preguntas[pid].respuestas.splice(rid, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
+        }
+      });
+    });
   }
 
-  // Like respuesta
-  if (e.target.closest('.btn-like-respuesta')) {
-    const btn = e.target.closest('.btn-like-respuesta');
-    const preguntaIdx = btn.getAttribute('data-pregunta');
-    const respuestaIdx = btn.getAttribute('data-respuesta');
-    preguntas[preguntaIdx].respuestas[respuestaIdx].likes = (preguntas[preguntaIdx].respuestas[respuestaIdx].likes || 0) + 1;
-    localStorage.setItem('preguntas', JSON.stringify(preguntas));
-    cargarPreguntas(document.getElementById('filtro').value);
-  }
-});
-   // Después de cargar todo el contenido dinámico...
-
-const filtro = document.getElementById('filtro').value;
-   
-  // Botón borrar pregunta
-document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const idx = parseInt(btn.getAttribute('data-index'));
-    if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      preguntas.splice(idx, 1);
-      localStorage.setItem('preguntas', JSON.stringify(preguntas));
-      cargarPreguntas(filtro);
-    }
-  });
-});
-
-// Botón borrar respuesta
-document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const idx = parseInt(btn.getAttribute('data-pregunta'));
-    const ridx = parseInt(btn.getAttribute('data-respuesta'));
-    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-    if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
-      if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
-        preguntas[idx].respuestas.splice(ridx, 1);
-        localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(filtro);
-      }
-    }
-  });
-});
-
-
-  // Guardar nueva pregunta desde el formulario
+  // Enviar nueva pregunta
   document.getElementById('new-post-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const autor = this.querySelector('#author').value.trim();
     const contenido = this.querySelector('#content').value.trim();
-
     if (!autor || !contenido) {
       alert('Por favor, rellena todos los campos de la pregunta.');
       return;
     }
 
-    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-
-    let titulo = contenido.split('.').shift() || contenido;
-
- preguntas.push({
-  autor,
-  contenido,
-  titulo,
-  respuestas: [],
-  fecha: Date.now(),  // <- Aquí la coma que faltaba
-  likes: 0
-});
+    const preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    const titulo = contenido.split('.')[0].slice(0, 100) || 'Pregunta';
+    preguntas.push({
+      autor,
+      contenido,
+      titulo,
+      respuestas: [],
+      fecha: Date.now(),
+      likes: 0
+    });
 
     localStorage.setItem('preguntas', JSON.stringify(preguntas));
     this.reset();
-
     alert('¡Tu pregunta ha sido guardada correctamente!');
     cargarPreguntas(document.getElementById('filtro').value);
   });
 
- // Event listener para filtro de orden
-document.getElementById('filtro').addEventListener('change', function() {
-  cargarPreguntas(this.value);
-});
+  // Likes en preguntas y respuestas
+  document.addEventListener('click', e => {
+    const likePregunta = e.target.closest('.btn-like-pregunta');
+    const likeRespuesta = e.target.closest('.btn-like-respuesta');
 
-// Carga inicial
-cargarPreguntas(document.getElementById('filtro').value);
+    if (likePregunta) {
+      const idx = likePregunta.getAttribute('data-index');
+      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+      preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
+      localStorage.setItem('preguntas', JSON.stringify(preguntas));
+      cargarPreguntas(document.getElementById('filtro').value);
+    }
+
+    if (likeRespuesta) {
+      const pid = likeRespuesta.getAttribute('data-pregunta');
+      const rid = likeRespuesta.getAttribute('data-respuesta');
+      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+      preguntas[pid].respuestas[rid].likes = (preguntas[pid].respuestas[rid].likes || 0) + 1;
+      localStorage.setItem('preguntas', JSON.stringify(preguntas));
+      cargarPreguntas(document.getElementById('filtro').value);
+    }
+  });
+
+  // Filtro de orden
+  document.getElementById('filtro').addEventListener('change', function() {
+    cargarPreguntas(this.value);
+  });
+
+  // Cargar preguntas al inicio
+  cargarPreguntas(document.getElementById('filtro').value);
 </script>
 
 </body>
