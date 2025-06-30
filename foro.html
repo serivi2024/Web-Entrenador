@@ -179,28 +179,32 @@
 function cargarPreguntas(filtro = 'mas_recientes') {
   const postsList = document.getElementById('posts-list');
 
-  // NO borrar el contenido, para mantener preguntas fijas
-  // postsList.innerHTML = '';
-
-  // Calculamos offset por preguntas fijas ya presentes en el DOM
+  // Contamos preguntas fijas ya en el DOM (no tocar)
   const preguntasFijasCount = postsList.querySelectorAll('article').length;
 
+  // Cargamos preguntas dinámicas de localStorage
   let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
+  // Ordenar preguntas según filtro
   if (filtro === 'mas_recientes') {
     preguntas.sort((a, b) => b.fecha - a.fecha);
   } else {
     preguntas.sort((a, b) => a.fecha - b.fecha);
   }
 
+  // Solo removemos preguntas dinámicas del DOM para evitar duplicados
+  // Eliminamos artículos dinámicos previos (los que vienen después de las preguntas fijas)
+  while (postsList.children.length > preguntasFijasCount) {
+    postsList.removeChild(postsList.lastChild);
+  }
+
+  // Añadimos preguntas dinámicas con índices ajustados
   preguntas.forEach((pregunta, idx) => {
+    const displayIdx = preguntasFijasCount + idx;
     const respuestas = pregunta.respuestas || [];
 
     const article = document.createElement('article');
     article.className = 'bg-white rounded-lg shadow p-6 mb-4';
-
-    // Ajustamos índices con offset
-    const displayIdx = preguntasFijasCount + idx;
 
     article.innerHTML = `
       <header class="mb-4 flex justify-between items-center">
@@ -229,7 +233,7 @@ function cargarPreguntas(filtro = 'mas_recientes') {
             </div>
           </div>
         `).join('')}
-        
+
         <form class="respuesta-form mt-4 space-y-2" data-index="${displayIdx}">
           <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required>
           <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
@@ -237,10 +241,10 @@ function cargarPreguntas(filtro = 'mas_recientes') {
         </form>
       </div>
     `;
+
     postsList.appendChild(article);
   });
 }
-
 
 // Solo 1 vez, elimina duplicados de aquí hacia abajo:
 
