@@ -2,158 +2,32 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Comunidad Powerlifting - Preguntas y debates</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Foro Interactivo</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
-      authDomain: "sergiopowercoach-foro.firebaseapp.com",
-      projectId: "sergiopowercoach-foro",
-      storageBucket: "sergiopowercoach-foro.appspot.com",
-      messagingSenderId: "571520460029",
-      appId: "1:571520460029:web:2c942e15addfe92d164a94",
-      measurementId: "G-18K2P3CEZS"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-  </script>
-  
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
-
-  <!-- HEADER SIMPLE -->
-  <header class="bg-blue-600 text-white p-4 sticky top-0 shadow-md z-20">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold">Comunidad Powerlifting</h1>
-      <nav class="space-x-4">
-        <a href="index.html" class="hover:underline">Inicio</a>
-        <a href="blog.html" class="hover:underline">Blog</a>
-        <a href="comunidad.html" class="underline font-semibold">Comunidad</a>
-      </nav>
-    </div>
+<body class="bg-gray-100 min-h-screen">
+  <header class="bg-blue-600 text-white p-4">
+    <h1 class="text-2xl font-bold">Foro Interactivo</h1>
   </header>
 
-  <main class="container mx-auto flex-grow px-4 py-8 max-w-4xl">
-
-    <!-- NUEVA PREGUNTA -->
-    <section class="mb-12 bg-white rounded-lg shadow p-6">
-      <h2 class="text-2xl font-bold mb-4">Plantea tu duda o tema</h2>
+  <main class="max-w-3xl mx-auto p-4 space-y-6">
+    <section>
+      <h2 class="text-xl font-semibold mb-2">Haz una pregunta</h2>
       <form id="new-post-form" class="space-y-4">
-        <input
-          type="text"
-          id="author"
-          placeholder="Tu nombre o nick"
-          class="w-full p-3 border border-gray-300 rounded"
-          required
-        />
-        <textarea
-          id="content"
-          rows="4"
-          placeholder="Describe tu duda, experiencia o tema para debate..."
-          class="w-full p-3 border border-gray-300 rounded resize-y"
-          required
-        ></textarea>
-        <button
-          type="submit"
-          class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
-        >
-          Publicar pregunta
-        </button>
+        <input type="text" id="author" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+        <textarea id="content" rows="4" placeholder="¿Qué quieres preguntar?" class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Publicar</button>
       </form>
-      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
     </section>
 
-    <!-- LISTADO DE PREGUNTAS -->
-    <section id="posts-list" class="space-y-8">
-
-      <!-- Pregunta 1 -->
-      <article class="bg-white rounded-lg shadow p-6">
-        <header class="mb-4 flex justify-between items-center">
-          <h3 class="text-xl font-semibold">¿Cuál es la mejor técnica para mejorar la sentadilla?</h3>
-          <span class="text-sm text-gray-500">por <strong>AnaFit</strong></span>
-        </header>
-        <p class="mb-4 text-gray-700">
-          He estado entrenando sentadillas pero siento que no progreso. ¿Qué consejos o técnicas me recomiendan para mejorar la forma y fuerza?
-        </p>
-        <div class="space-y-4 border-t border-gray-200 pt-4">
-
-          <!-- Respuesta -->
-          <div class="bg-gray-100 rounded p-3">
-            <p><strong>EntrenadorPro:</strong> Enfócate en mantener el core activado y la barra estable. También, trabaja movilidad de cadera y tobillos.</p>
-          </div>
-          <div class="bg-gray-100 rounded p-3">
-            <p><strong>FitLover:</strong> Añade trabajo de sentadillas frontales y sentadillas con pausa para ganar control.</p>
-          </div>
-
-          <!-- Formulario de respuesta -->
-          <form class="mt-4 space-y-2">
-            <textarea
-              rows="2"
-              placeholder="Escribe tu respuesta..."
-              class="w-full p-2 border border-gray-300 rounded resize-y"
-              required
-            ></textarea>
-            <button
-              type="submit"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-            >
-              Responder
-            </button>
-          </form>
-        </div>
-      </article>
-
-      <!-- Pregunta 2 -->
-      <article class="bg-white rounded-lg shadow p-6">
-        <header class="mb-4 flex justify-between items-center">
-          <h3 class="text-xl font-semibold">¿Qué suplementos ayudan a mejorar la recuperación?</h3>
-          <span class="text-sm text-gray-500">por <strong>CarlosP</strong></span>
-        </header>
-        <p class="mb-4 text-gray-700">
-          Después de entrenar muy duro me cuesta recuperarme, ¿qué suplementos me recomiendan para acelerar la recuperación muscular?
-        </p>
-        <div class="space-y-4 border-t border-gray-200 pt-4">
-
-          <!-- Respuesta -->
-          <div class="bg-gray-100 rounded p-3">
-            <p><strong>NutriCoach:</strong> Proteína de suero, BCAA y creatina son buenos para recuperación y síntesis muscular.</p>
-          </div>
-
-          <!-- Formulario de respuesta -->
-          <form class="mt-4 space-y-2">
-            <textarea
-              rows="2"
-              placeholder="Escribe tu respuesta..."
-              class="w-full p-2 border border-gray-300 rounded resize-y"
-              required
-            ></textarea>
-            <button
-              type="submit"
-              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-            >
-              Responder
-            </button>
-          </form>
-        </div>
-      </article>
-
+    <section>
+      <h2 class="text-xl font-semibold mb-4">Preguntas recientes</h2>
+      <div id="posts-list" class="space-y-6"></div>
     </section>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="bg-blue-600 text-white p-6 text-center mt-12">
-    <p>&copy; 2025 TuNombreFit | Comunidad Powerlifting</p>
-  </footer>
-
   <script>
-    // Función para cargar preguntas del localStorage
     function cargarPreguntas() {
       const postsList = document.getElementById('posts-list');
       postsList.innerHTML = '';
@@ -166,18 +40,27 @@
 
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
-            <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-            <div class="flex items-center space-x-2">
-              <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
-              <button data-index="${idx}" class="borrar-pregunta bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition text-xs">Borrar pregunta</button>
-            </div>
+            <h3 class="text-xl font-semibold" contenteditable="false" id="titulo-${idx}">${pregunta.titulo}</h3>
+            <span class="text-sm text-gray-500">por <strong contenteditable="false" id="autor-${idx}">${pregunta.autor}</strong></span>
           </header>
-          <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
+          <p class="mb-4 text-gray-700" contenteditable="false" id="contenido-${idx}">${pregunta.contenido}</p>
+          <div class="flex gap-2 mb-2">
+            <button class="text-blue-500 text-sm hover:underline editar-pregunta" data-index="${idx}">Editar</button>
+            <button class="text-green-600 text-sm hover:underline guardar-pregunta hidden" data-index="${idx}">Guardar</button>
+            <button class="text-red-500 text-sm hover:underline eliminar-pregunta" data-index="${idx}">Eliminar</button>
+          </div>
           <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
-            ${pregunta.respuestas ? pregunta.respuestas.map((resp, rIdx) => `
-              <div class="bg-gray-100 rounded p-3 flex justify-between items-start">
-                <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
-                <button data-pregunta-index="${idx}" data-respuesta-index="${rIdx}" class="borrar-respuesta bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition text-xs ml-4">Borrar respuesta</button>
+            ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
+              <div class="bg-gray-100 rounded p-3 flex justify-between items-start gap-2">
+                <div class="flex-1">
+                  <p><strong contenteditable="false" id="resp-autor-${idx}-${ridx}">${resp.autor}</strong>: 
+                  <span contenteditable="false" id="resp-texto-${idx}-${ridx}">${resp.texto}</span></p>
+                </div>
+                <div class="text-xs text-right space-y-1">
+                  <button class="text-blue-400 hover:underline editar-respuesta" data-pindex="${idx}" data-rindex="${ridx}">Editar</button>
+                  <button class="text-green-500 hover:underline guardar-respuesta hidden" data-pindex="${idx}" data-rindex="${ridx}">Guardar</button>
+                  <button class="text-red-400 hover:underline eliminar-respuesta" data-pindex="${idx}" data-rindex="${ridx}">Eliminar</button>
+                </div>
               </div>
             `).join('') : ''}
             <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
@@ -191,7 +74,6 @@
         postsList.appendChild(article);
       });
 
-      // Añadir event listeners a los formularios de respuesta que se acaban de crear
       document.querySelectorAll('.respuesta-form').forEach(form => {
         form.addEventListener('submit', function(e) {
           e.preventDefault();
@@ -203,49 +85,95 @@
             return;
           }
 
-          // Añadir respuesta a la pregunta en localStorage
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
           if (!preguntas[idx].respuestas) {
             preguntas[idx].respuestas = [];
           }
           preguntas[idx].respuestas.push({ autor: nombre, texto: texto });
           localStorage.setItem('preguntas', JSON.stringify(preguntas));
-
-          // Recargar preguntas para mostrar la nueva respuesta
           cargarPreguntas();
         });
       });
 
-      // Añadir event listeners para borrar preguntas
-      document.querySelectorAll('.borrar-pregunta').forEach(button => {
-        button.addEventListener('click', function() {
+      document.querySelectorAll('.eliminar-pregunta').forEach(btn => {
+        btn.addEventListener('click', function () {
           const idx = this.dataset.index;
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          preguntas.splice(idx, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas();
-        });
-      });
-
-      // Añadir event listeners para borrar respuestas
-      document.querySelectorAll('.borrar-respuesta').forEach(button => {
-        button.addEventListener('click', function() {
-          const preguntaIdx = this.dataset.preguntaIndex;
-          const respuestaIdx = this.dataset.respuestaIndex;
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          if (preguntas[preguntaIdx] && preguntas[preguntaIdx].respuestas) {
-            preguntas[preguntaIdx].respuestas.splice(respuestaIdx, 1);
+          if (confirm('¿Estás seguro de que quieres eliminar esta pregunta?')) {
+            let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+            preguntas.splice(idx, 1);
             localStorage.setItem('preguntas', JSON.stringify(preguntas));
             cargarPreguntas();
           }
         });
       });
+
+      document.querySelectorAll('.editar-pregunta').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const idx = this.dataset.index;
+          document.getElementById(`titulo-${idx}`).contentEditable = true;
+          document.getElementById(`autor-${idx}`).contentEditable = true;
+          document.getElementById(`contenido-${idx}`).contentEditable = true;
+          this.classList.add('hidden');
+          document.querySelector(`.guardar-pregunta[data-index="${idx}"]`).classList.remove('hidden');
+        });
+      });
+
+      document.querySelectorAll('.guardar-pregunta').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const idx = this.dataset.index;
+          const titulo = document.getElementById(`titulo-${idx}`).innerText.trim();
+          const autor = document.getElementById(`autor-${idx}`).innerText.trim();
+          const contenido = document.getElementById(`contenido-${idx}`).innerText.trim();
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          preguntas[idx].titulo = titulo;
+          preguntas[idx].autor = autor;
+          preguntas[idx].contenido = contenido;
+          localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          cargarPreguntas();
+        });
+      });
+
+      document.querySelectorAll('.eliminar-respuesta').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const pidx = this.dataset.pindex;
+          const ridx = this.dataset.rindex;
+          if (confirm('¿Eliminar esta respuesta?')) {
+            let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+            preguntas[pidx].respuestas.splice(ridx, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas();
+          }
+        });
+      });
+
+      document.querySelectorAll('.editar-respuesta').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const pidx = this.dataset.pindex;
+          const ridx = this.dataset.rindex;
+          document.getElementById(`resp-autor-${pidx}-${ridx}`).contentEditable = true;
+          document.getElementById(`resp-texto-${pidx}-${ridx}`).contentEditable = true;
+          this.classList.add('hidden');
+          document.querySelector(`.guardar-respuesta[data-pindex="${pidx}"][data-rindex="${ridx}"]`).classList.remove('hidden');
+        });
+      });
+
+      document.querySelectorAll('.guardar-respuesta').forEach(btn => {
+        btn.addEventListener('click', function () {
+          const pidx = this.dataset.pindex;
+          const ridx = this.dataset.rindex;
+          const autor = document.getElementById(`resp-autor-${pidx}-${ridx}`).innerText.trim();
+          const texto = document.getElementById(`resp-texto-${pidx}-${ridx}`).innerText.trim();
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          preguntas[pidx].respuestas[ridx].autor = autor;
+          preguntas[pidx].respuestas[ridx].texto = texto;
+          localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          cargarPreguntas();
+        });
+      });
     }
 
-    // Al cargar la página, mostrar las preguntas guardadas
     cargarPreguntas();
 
-    // Manejar formulario de nueva pregunta
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const autor = this.querySelector('#author').value.trim();
@@ -270,3 +198,4 @@
   </script>
 </body>
 </html>
+
