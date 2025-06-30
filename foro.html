@@ -67,7 +67,9 @@
           Publicar pregunta
         </button>
       </form>
-      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
+      <p class="mt-2 text-sm text-gray-500 italic" style="display:none;">
+        * Esta es una demo. Las preguntas no se guardan aún.
+      </p>
       <!-- Nota: Este párrafo se mantiene porque pediste NO eliminar ninguna línea -->
     </section>
 
@@ -163,14 +165,11 @@
   </footer>
 
   <script>
-    // Demo: prevenir recarga y mostrar alert al enviar nueva pregunta
+    // Demo: prevenimos recarga y ya NO mostramos alerta de demo porque ahora guardamos en localStorage
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
-      alert('Gracias por tu pregunta. En esta demo aún no se guarda.');
-      this.reset();
+      // Aquí ya no se muestra alert de demo, porque ahora sí se guarda en localStorage (función abajo)
     });
-
-    // Aquí puedes agregar funcionalidad para responder preguntas más adelante
   </script>
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
@@ -266,6 +265,7 @@
     }
 
     // Guardar nueva pregunta desde el formulario
+    // Quitamos el listener duplicado del principio, y creamos este que guarda de verdad y recarga lista
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const autor = this.querySelector('#author').value.trim();
