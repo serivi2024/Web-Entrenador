@@ -173,7 +173,7 @@
     const postsList = document.getElementById('posts-list');
     postsList.innerHTML = '';
 
-    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    // let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
     // Ordenar según filtro
     if (filtro === 'mas_recientes') {
@@ -192,26 +192,45 @@
         : `<span class="flex items-center text-gray-700 text-sm font-medium"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.931L3 20l1.931-4.745A7.963 7.963 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>${totalRespuestas} respuesta${totalRespuestas > 1 ? 's' : ''}</span>`;
 
       article.innerHTML = `
-        <header class="mb-4 flex justify-between items-center">
-          <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-          <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
-          <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
-        </header>
-        <div class="mb-4">${respuestasTexto}</div>
-        <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
-          ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
-            <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
-              <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
-              <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold ml-4">[X]</button>
-            </div>
-          `).join('') : ''}
-          <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
-            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
-            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
-          </form>
+  <header class="mb-4 flex justify-between items-center">
+    <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+    <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+
+    <div class="flex items-center space-x-4">
+      <button data-index="${idx}" class="btn-like-pregunta text-blue-600 hover:text-blue-800 font-semibold flex items-center space-x-1" aria-label="Like pregunta">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="${pregunta.likes > 0 ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+        </svg>
+        <span class="likes-count">${pregunta.likes || 0}</span>
+      </button>
+      <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
+    </div>
+  </header>
+
+  <div class="mb-4">${respuestasTexto}</div>
+
+  <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
+    ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
+      <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
+        <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+        <div class="flex items-center space-x-4">
+          <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-like-respuesta text-blue-600 hover:text-blue-800 font-semibold flex items-center space-x-1" aria-label="Like respuesta">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="${resp.likes > 0 ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            <span class="likes-count">${resp.likes || 0}</span>
+          </button>
+          <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold ml-4">[X]</button>
         </div>
-      `;
+      </div>
+    `).join('') : ''}
+    <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
+      <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+      <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+    </form>
+  </div>
+`;
 
       postsList.appendChild(article);
     });
@@ -226,12 +245,35 @@
         if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
         let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
         if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
-        preguntas[idx].respuestas.push({ autor, texto });
+        preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
         localStorage.setItem('preguntas', JSON.stringify(preguntas));
         cargarPreguntas(filtro);
       });
     });
+// Variable global para las preguntas, para manejar likes y demás
+let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
+// Listener para like de preguntas y respuestas
+document.addEventListener('click', (e) => {
+  // Like pregunta
+  if (e.target.closest('.btn-like-pregunta')) {
+    const btn = e.target.closest('.btn-like-pregunta');
+    const idx = btn.getAttribute('data-index');
+    preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  // Like respuesta
+  if (e.target.closest('.btn-like-respuesta')) {
+    const btn = e.target.closest('.btn-like-respuesta');
+    const preguntaIdx = btn.getAttribute('data-pregunta');
+    const respuestaIdx = btn.getAttribute('data-respuesta');
+    preguntas[preguntaIdx].respuestas[respuestaIdx].likes = (preguntas[preguntaIdx].respuestas[respuestaIdx].likes || 0) + 1;
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+});
     // Botón borrar pregunta
     document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -283,6 +325,7 @@
       titulo,
       respuestas: [],
       fecha: Date.now()
+      likes: 0 // añadir
     });
 
     localStorage.setItem('preguntas', JSON.stringify(preguntas));
