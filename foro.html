@@ -167,7 +167,7 @@
   </script>
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
-  <script>
+ <script>
   function cargarPreguntas(filtro = 'mas_recientes') {
     const postsList = document.getElementById('posts-list');
     postsList.innerHTML = '';
@@ -217,7 +217,7 @@
     });
   }
 
-  // Aquí el único event listener global que maneja TODO:
+  // Manejo global clicks para likes y borrados
   document.addEventListener('click', e => {
     if (e.target.classList.contains('btn-like-pregunta')) {
       const idx = e.target.getAttribute('data-index');
@@ -262,7 +262,7 @@
     }
   });
 
-  // Agregar nuevo post
+  // Nuevo post
   document.getElementById('new-post-form').addEventListener('submit', e => {
     e.preventDefault();
     const autor = document.getElementById('author').value.trim();
@@ -282,14 +282,12 @@
 
     localStorage.setItem('preguntas', JSON.stringify(preguntas));
 
-    // Limpiar form
     e.target.reset();
 
-    // Recargar lista
     cargarPreguntas(document.getElementById('filtro').value);
   });
 
-  // Manejar envío de respuestas: como cada formulario se genera dinámicamente, delegamos el submit en todo el documento
+  // Envío de respuestas (delegado, porque son dinámicos)
   document.addEventListener('submit', e => {
     if (e.target.classList.contains('respuesta-form')) {
       e.preventDefault();
@@ -306,20 +304,18 @@
       preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
       localStorage.setItem('preguntas', JSON.stringify(preguntas));
 
-      // Recargar lista
       cargarPreguntas(document.getElementById('filtro').value);
     }
   });
 
-  // Cambiar filtro
+  // Cambio de filtro
   document.getElementById('filtro').addEventListener('change', e => {
     cargarPreguntas(e.target.value);
   });
 
   // Carga inicial
   cargarPreguntas();
-
-  </script>
+</script>
 
 </body>
 </html>
