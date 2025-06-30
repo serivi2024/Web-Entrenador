@@ -216,53 +216,67 @@
       postsList.appendChild(article);
     });
 
-    // --- EVENTOS POR CADA CARGA ---
+  // Delegación global para manejar respuestas, borrar, y likes
+document.addEventListener('click', e => {
+  // Enviar respuesta (submit de formulario)
+  if (e.target.closest('.respuesta-form button[type="submit"]')) {
+    e.preventDefault();
+    const form = e.target.closest('.respuesta-form');
+    const idx = parseInt(form.getAttribute('data-index'));
+    const autor = form.querySelector('input').value.trim();
+    const texto = form.querySelector('textarea').value.trim();
+    if (!autor || !texto) return alert('Debes rellenar todos los campos.');
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    preguntas[idx].respuestas = preguntas[idx].respuestas || [];
+    preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
 
-    // 1. Enviar respuesta
-    document.querySelectorAll('.respuesta-form').forEach(form => {
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        const idx = parseInt(form.getAttribute('data-index'));
-        const autor = form.querySelector('input').value.trim();
-        const texto = form.querySelector('textarea').value.trim();
-        if (!autor || !texto) return alert('Debes rellenar todos los campos.');
-        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-        preguntas[idx].respuestas = preguntas[idx].respuestas || [];
-        preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
+  // Borrar pregunta
+  if (e.target.classList.contains('btn-borrar-pregunta')) {
+    const idx = parseInt(e.target.getAttribute('data-index'));
+    if (confirm('¿Seguro que deseas borrar esta pregunta y sus respuestas?')) {
+      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+      preguntas.splice(idx, 1);
+      localStorage.setItem('preguntas', JSON.stringify(preguntas));
+      cargarPreguntas(document.getElementById('filtro').value);
+    }
+  }
+
+  // Borrar respuesta
+  if (e.target.classList.contains('btn-borrar-respuesta')) {
+    const pid = parseInt(e.target.getAttribute('data-pregunta'));
+    const rid = parseInt(e.target.getAttribute('data-respuesta'));
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    if (preguntas[pid] && preguntas[pid].respuestas && preguntas[pid].respuestas[rid]) {
+      if (confirm('¿Seguro que deseas borrar esta respuesta?')) {
+        preguntas[pid].respuestas.splice(rid, 1);
         localStorage.setItem('preguntas', JSON.stringify(preguntas));
         cargarPreguntas(document.getElementById('filtro').value);
-      });
-    });
-
-    // 2. Borrar pregunta
-    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-index'));
-        if (confirm('¿Seguro que deseas borrar esta pregunta y sus respuestas?')) {
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          preguntas.splice(idx, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
-        }
-      });
-    });
-
-    // 3. Borrar respuesta
-    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const pid = parseInt(btn.getAttribute('data-pregunta'));
-        const rid = parseInt(btn.getAttribute('data-respuesta'));
-        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-        if (preguntas[pid] && preguntas[pid].respuestas && preguntas[pid].respuestas[rid]) {
-          if (confirm('¿Seguro que deseas borrar esta respuesta?')) {
-            preguntas[pid].respuestas.splice(rid, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        }
-      });
-    });
+      }
+    }
   }
+
+  // Like pregunta
+  if (e.target.classList.contains('btn-like-pregunta')) {
+    const idx = e.target.getAttribute('data-index');
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  // Like respuesta
+  if (e.target.classList.contains('btn-like-respuesta')) {
+    const pid = e.target.getAttribute('data-pregunta');
+    const rid = e.target.getAttribute('data-respuesta');
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    preguntas[pid].respuestas[rid].likes = (preguntas[pid].respuestas[rid].likes || 0) + 1;
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+});
 
   // Enviar nueva pregunta
   document.getElementById('new-post-form').addEventListener('submit', function(e) {
