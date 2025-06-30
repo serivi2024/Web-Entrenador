@@ -175,6 +175,7 @@
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
  <script>
+// Función para cargar preguntas y respuestas en el DOM
 function cargarPreguntas(filtro = 'mas_recientes') {
   const postsList = document.getElementById('posts-list');
   postsList.innerHTML = '';
@@ -192,10 +193,10 @@ function cargarPreguntas(filtro = 'mas_recientes') {
     const respuestas = pregunta.respuestas || [];
 
     const article = document.createElement('article');
-    article.className = 'bg-white rounded-lg shadow p-6';
+    article.className = 'bg-white rounded-lg shadow p-6 mb-4';
     article.innerHTML = `
       <header class="mb-4 flex justify-between items-center">
-        <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+        <h3 class="text-xl font-semibold">${pregunta.titulo || pregunta.contenido || 'Sin título'}</h3>
         <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
       </header>
       <p class="mb-4 text-gray-700">${pregunta.contenido || ''}</p>
@@ -225,10 +226,46 @@ function cargarPreguntas(filtro = 'mas_recientes') {
   });
 }
 
-// Event listener global (click)
+// Cargar preguntas al inicio
+document.addEventListener('DOMContentLoaded', () => {
+  const filtroSelect = document.getElementById('filtro');
+  cargarPreguntas(filtroSelect ? filtroSelect.value : 'mas_recientes');
+});
+
+// Evento cambio filtro
+document.getElementById('filtro').addEventListener('change', e => {
+  cargarPreguntas(e.target.value);
+});
+
+// Crear pregunta
+document.getElementById('new-post-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const autor = document.getElementById('author').value.trim();
+  const contenido = document.getElementById('content').value.trim();
+
+  if (!autor || !contenido) return alert('Rellena todos los campos');
+
+  let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+
+  preguntas.push({
+    titulo: contenido, // aquí puedes separar título y contenido si quieres
+    autor: autor,
+    contenido: contenido,
+    fecha: Date.now(),
+    respuestas: [],
+    likes: 0
+  });
+
+  localStorage.setItem('preguntas', JSON.stringify(preguntas));
+  e.target.reset();
+  cargarPreguntas(document.getElementById('filtro').value);
+});
+
+// Delegación eventos global para clicks en botones y submit de respuestas
 document.addEventListener('click', e => {
+  // Like pregunta
   if (e.target.classList.contains('btn-like-pregunta')) {
-    const idx = Number(e.target.getAttribute('data-index'));
+    const idx = Number(e.target.dataset.index);
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[idx]) {
       preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
@@ -237,8 +274,9 @@ document.addEventListener('click', e => {
     }
   }
 
+  // Borrar pregunta
   if (e.target.classList.contains('btn-borrar-pregunta')) {
-    const idx = Number(e.target.getAttribute('data-index'));
+    const idx = Number(e.target.dataset.index);
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[idx]) {
       preguntas.splice(idx, 1);
@@ -247,9 +285,10 @@ document.addEventListener('click', e => {
     }
   }
 
+  // Like respuesta
   if (e.target.classList.contains('btn-like-respuesta')) {
-    const pIdx = Number(e.target.getAttribute('data-pregunta'));
-    const rIdx = Number(e.target.getAttribute('data-respuesta'));
+    const pIdx = Number(e.target.dataset.pregunta);
+    const rIdx = Number(e.target.dataset.respuesta);
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[pIdx] && preguntas[pIdx].respuestas && preguntas[pIdx].respuestas[rIdx]) {
       preguntas[pIdx].respuestas[rIdx].likes = (preguntas[pIdx].respuestas[rIdx].likes || 0) + 1;
@@ -258,9 +297,10 @@ document.addEventListener('click', e => {
     }
   }
 
+  // Borrar respuesta
   if (e.target.classList.contains('btn-borrar-respuesta')) {
-    const pIdx = Number(e.target.getAttribute('data-pregunta'));
-    const rIdx = Number(e.target.getAttribute('data-respuesta'));
+    const pIdx = Number(e.target.dataset.pregunta);
+    const rIdx = Number(e.target.dataset.respuesta);
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[pIdx] && preguntas[pIdx].respuestas && preguntas[pIdx].respuestas[rIdx]) {
       preguntas[pIdx].respuestas.splice(rIdx, 1);
@@ -270,51 +310,27 @@ document.addEventListener('click', e => {
   }
 });
 
-// Event listener para agregar nueva pregunta
-document.getElementById('new-post-form').addEventListener('submit', e => {
-  e.preventDefault();
-  const autor = document.getElementById('author').value.trim();
-  const contenido = document.getElementById('content').value.trim();
-
-  if (!autor || !contenido) return;
-
-  let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-
-  preguntas.push({
-    titulo: contenido, // O si tienes campo titulo separado, usarlo aquí
-    autor: autor,
-    fecha: Date.now(),
-    respuestas: [],
-    likes: 0
-  });
-
-  localStorage.setItem('preguntas', JSON.stringify(preguntas));
-
-  e.target.reset();
-
-  cargarPreguntas(document.getElementById('filtro').value);
-});
-
-// Event listener para respuestas
+// Enviar respuesta
 document.addEventListener('submit', e => {
   if (e.target.classList.contains('respuesta-form')) {
     e.preventDefault();
-    const idx = Number(e.target.getAttribute('data-index'));
+    const idx = Number(e.target.dataset.index);
     const inputs = e.target.querySelectorAll('input, textarea');
     const autor = inputs[0].value.trim();
     const texto = inputs[1].value.trim();
 
-    if (!autor || !texto) return;
+    if (!autor || !texto) return alert('Rellena todos los campos para responder');
 
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
 
     preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
     localStorage.setItem('preguntas', JSON.stringify(preguntas));
-
+    e.target.reset();
     cargarPreguntas(document.getElementById('filtro').value);
   }
 });
+
 
   // Nuevo post
   document.getElementById('new-post-form').addEventListener('submit', e => {
