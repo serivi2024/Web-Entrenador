@@ -46,27 +46,34 @@
     <section class="mb-12 bg-white rounded-lg shadow p-6">
       <h2 class="text-2xl font-bold mb-4">Plantea tu duda o tema</h2>
       <form id="new-post-form" class="space-y-4">
-        <input
-          type="text"
-          id="author"
-          placeholder="Tu nombre o nick"
-          class="w-full p-3 border border-gray-300 rounded"
-          required
-        />
-        <textarea
-          id="content"
-          rows="4"
-          placeholder="Describe tu duda, experiencia o tema para debate..."
-          class="w-full p-3 border border-gray-300 rounded resize-y"
-          required
-        ></textarea>
-        <button
-          type="submit"
-          class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
-        >
-          Publicar pregunta
-        </button>
-      </form>
+  <input
+    type="text"
+    id="author"
+    placeholder="Tu nombre o nick"
+    class="w-full p-3 border border-gray-300 rounded"
+    required
+  />
+  <input
+    type="text"
+    id="title"
+    placeholder="Título de tu pregunta"
+    class="w-full p-3 border border-gray-300 rounded"
+    required
+  />
+  <textarea
+    id="content"
+    rows="4"
+    placeholder="Describe tu duda, experiencia o tema para debate..."
+    class="w-full p-3 border border-gray-300 rounded resize-y"
+    required
+  ></textarea>
+  <button
+    type="submit"
+    class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
+  >
+    Publicar pregunta
+  </button>
+</form>
       <!-- Nota: Este párrafo se mantiene porque pediste NO eliminar ninguna línea -->
     </section>
 
@@ -189,6 +196,7 @@
       article.innerHTML = `
         <header class="mb-4 flex justify-between items-center">
           <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+<p class="mb-4 text-gray-700">${pregunta.contenido}</p>
           <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
         </header>
         <div class="flex items-center gap-4 text-sm mb-4">
@@ -264,28 +272,34 @@
 
   // Nuevo post
   document.getElementById('new-post-form').addEventListener('submit', e => {
-    e.preventDefault();
-    const autor = document.getElementById('author').value.trim();
-    const contenido = document.getElementById('content').value.trim();
+  e.preventDefault();
 
-    if (!autor || !contenido) return;
+  const autor = document.getElementById('author').value.trim();
+  const titulo = document.getElementById('title').value.trim();
+  const contenido = document.getElementById('content').value.trim();
 
-    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+  // Validar que autor, título y contenido estén completos
+  if (!autor || !titulo || !contenido) return;
 
-    preguntas.push({
-      titulo: contenido,
-      autor: autor,
-      fecha: Date.now(),
-      respuestas: [],
-      likes: 0
-    });
+  let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
-    localStorage.setItem('preguntas', JSON.stringify(preguntas));
-
-    e.target.reset();
-
-    cargarPreguntas(document.getElementById('filtro').value);
+  preguntas.push({
+    titulo: titulo,       // Guardamos título separado
+    contenido: contenido, // Guardamos contenido separado
+    autor: autor,
+    fecha: Date.now(),
+    respuestas: [],
+    likes: 0
   });
+
+  localStorage.setItem('preguntas', JSON.stringify(preguntas));
+
+  // Limpiar form
+  e.target.reset();
+
+  // Recargar lista con filtro actual
+  cargarPreguntas(document.getElementById('filtro').value);
+});
 
   // Envío de respuestas (delegado, porque son dinámicos)
   document.addEventListener('submit', e => {
