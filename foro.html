@@ -67,13 +67,82 @@
           Publicar pregunta
         </button>
       </form>
-      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas se guardan en localStorage.</p>
+      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
     </section>
 
     <!-- LISTADO DE PREGUNTAS -->
     <section id="posts-list" class="space-y-8">
 
-      <!-- Aquí se cargarán las preguntas dinámicamente -->
+      <!-- Pregunta 1 -->
+      <article class="bg-white rounded-lg shadow p-6">
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">¿Cuál es la mejor técnica para mejorar la sentadilla?</h3>
+          <span class="text-sm text-gray-500">por <strong>AnaFit</strong></span>
+        </header>
+        <p class="mb-4 text-gray-700">
+          He estado entrenando sentadillas pero siento que no progreso. ¿Qué consejos o técnicas me recomiendan para mejorar la forma y fuerza?
+        </p>
+        <div class="space-y-4 border-t border-gray-200 pt-4">
+
+          <!-- Respuesta -->
+          <div class="bg-gray-100 rounded p-3">
+            <p><strong>EntrenadorPro:</strong> Enfócate en mantener el core activado y la barra estable. También, trabaja movilidad de cadera y tobillos.</p>
+          </div>
+          <div class="bg-gray-100 rounded p-3">
+            <p><strong>FitLover:</strong> Añade trabajo de sentadillas frontales y sentadillas con pausa para ganar control.</p>
+          </div>
+
+          <!-- Formulario de respuesta -->
+          <form class="mt-4 space-y-2">
+            <textarea
+              rows="2"
+              placeholder="Escribe tu respuesta..."
+              class="w-full p-2 border border-gray-300 rounded resize-y"
+              required
+            ></textarea>
+            <button
+              type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Responder
+            </button>
+          </form>
+        </div>
+      </article>
+
+      <!-- Pregunta 2 -->
+      <article class="bg-white rounded-lg shadow p-6">
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">¿Qué suplementos ayudan a mejorar la recuperación?</h3>
+          <span class="text-sm text-gray-500">por <strong>CarlosP</strong></span>
+        </header>
+        <p class="mb-4 text-gray-700">
+          Después de entrenar muy duro me cuesta recuperarme, ¿qué suplementos me recomiendan para acelerar la recuperación muscular?
+        </p>
+        <div class="space-y-4 border-t border-gray-200 pt-4">
+
+          <!-- Respuesta -->
+          <div class="bg-gray-100 rounded p-3">
+            <p><strong>NutriCoach:</strong> Proteína de suero, BCAA y creatina son buenos para recuperación y síntesis muscular.</p>
+          </div>
+
+          <!-- Formulario de respuesta -->
+          <form class="mt-4 space-y-2">
+            <textarea
+              rows="2"
+              placeholder="Escribe tu respuesta..."
+              class="w-full p-2 border border-gray-300 rounded resize-y"
+              required
+            ></textarea>
+            <button
+              type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Responder
+            </button>
+          </form>
+        </div>
+      </article>
 
     </section>
   </main>
@@ -84,7 +153,7 @@
   </footer>
 
   <script>
-    // Función para cargar preguntas del localStorage y mostrarlas
+    // Función para cargar preguntas del localStorage
     function cargarPreguntas() {
       const postsList = document.getElementById('posts-list');
       postsList.innerHTML = '';
@@ -98,13 +167,17 @@
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
             <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-            <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+            <div class="flex items-center space-x-2">
+              <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+              <button data-index="${idx}" class="borrar-pregunta bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition text-xs">Borrar pregunta</button>
+            </div>
           </header>
           <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
           <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
-            ${pregunta.respuestas ? pregunta.respuestas.map(resp => `
-              <div class="bg-gray-100 rounded p-3">
+            ${pregunta.respuestas ? pregunta.respuestas.map((resp, rIdx) => `
+              <div class="bg-gray-100 rounded p-3 flex justify-between items-start">
                 <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+                <button data-pregunta-index="${idx}" data-respuesta-index="${rIdx}" class="borrar-respuesta bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition text-xs ml-4">Borrar respuesta</button>
               </div>
             `).join('') : ''}
             <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
@@ -118,7 +191,7 @@
         postsList.appendChild(article);
       });
 
-      // Añadir event listeners a los formularios de respuesta
+      // Añadir event listeners a los formularios de respuesta que se acaban de crear
       document.querySelectorAll('.respuesta-form').forEach(form => {
         form.addEventListener('submit', function(e) {
           e.preventDefault();
@@ -130,6 +203,7 @@
             return;
           }
 
+          // Añadir respuesta a la pregunta en localStorage
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
           if (!preguntas[idx].respuestas) {
             preguntas[idx].respuestas = [];
@@ -137,12 +211,38 @@
           preguntas[idx].respuestas.push({ autor: nombre, texto: texto });
           localStorage.setItem('preguntas', JSON.stringify(preguntas));
 
+          // Recargar preguntas para mostrar la nueva respuesta
           cargarPreguntas();
+        });
+      });
+
+      // Añadir event listeners para borrar preguntas
+      document.querySelectorAll('.borrar-pregunta').forEach(button => {
+        button.addEventListener('click', function() {
+          const idx = this.dataset.index;
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          preguntas.splice(idx, 1);
+          localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          cargarPreguntas();
+        });
+      });
+
+      // Añadir event listeners para borrar respuestas
+      document.querySelectorAll('.borrar-respuesta').forEach(button => {
+        button.addEventListener('click', function() {
+          const preguntaIdx = this.dataset.preguntaIndex;
+          const respuestaIdx = this.dataset.respuestaIndex;
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          if (preguntas[preguntaIdx] && preguntas[preguntaIdx].respuestas) {
+            preguntas[preguntaIdx].respuestas.splice(respuestaIdx, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas();
+          }
         });
       });
     }
 
-    // Cargar preguntas al iniciar
+    // Al cargar la página, mostrar las preguntas guardadas
     cargarPreguntas();
 
     // Manejar formulario de nueva pregunta
