@@ -274,35 +274,39 @@ document.addEventListener('click', (e) => {
     cargarPreguntas(document.getElementById('filtro').value);
   }
 });
-    // Botón borrar pregunta
-    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-index'));
-        if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          preguntas.splice(idx, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(filtro);
-        }
-      });
-    });
+   // Después de cargar todo el contenido dinámico...
 
-    // Botón borrar respuesta
-    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-pregunta'));
-        const ridx = parseInt(btn.getAttribute('data-respuesta'));
-        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-        if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
-          if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
-            preguntas[idx].respuestas.splice(ridx, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(filtro);
-          }
-        }
-      });
-    });
-  }
+const filtro = document.getElementById('filtro').value;
+   
+  // Botón borrar pregunta
+document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.getAttribute('data-index'));
+    if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
+      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+      preguntas.splice(idx, 1);
+      localStorage.setItem('preguntas', JSON.stringify(preguntas));
+      cargarPreguntas(filtro);
+    }
+  });
+});
+
+// Botón borrar respuesta
+document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = parseInt(btn.getAttribute('data-pregunta'));
+    const ridx = parseInt(btn.getAttribute('data-respuesta'));
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
+      if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
+        preguntas[idx].respuestas.splice(ridx, 1);
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+        cargarPreguntas(filtro);
+      }
+    }
+  });
+});
+
 
   // Guardar nueva pregunta desde el formulario
   document.getElementById('new-post-form').addEventListener('submit', function(e) {
@@ -324,8 +328,8 @@ document.addEventListener('click', (e) => {
       contenido,
       titulo,
       respuestas: [],
-      fecha: Date.now()
-      likes: 0 // añadir
+      fecha: Date.now(),
+      likes: 0
     });
 
     localStorage.setItem('preguntas', JSON.stringify(preguntas));
