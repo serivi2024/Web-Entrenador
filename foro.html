@@ -175,17 +175,42 @@
 
   <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
   <script>
-  // Función para cargar preguntas y respuestas del localStorage
+  const defaultPreguntas = [
+    {
+      autor: "AnaFit",
+      contenido: "He estado entrenando sentadillas pero siento que no progreso. ¿Qué consejos o técnicas me recomiendan para mejorar la forma y fuerza?",
+      titulo: "¿Cuál es la mejor técnica para mejorar la sentadilla?",
+      fecha: Date.now() - 100000,
+      respuestas: [
+        { autor: "EntrenadorPro", texto: "Enfócate en mantener el core activado y la barra estable.", likes: 0 },
+        { autor: "FitLover", texto: "Añade trabajo de sentadillas frontales y sentadillas con pausa.", likes: 0 }
+      ]
+    },
+    {
+      autor: "CarlosP",
+      contenido: "Después de entrenar muy duro me cuesta recuperarme, ¿qué suplementos me recomiendan para acelerar la recuperación muscular?",
+      titulo: "¿Qué suplementos ayudan a mejorar la recuperación?",
+      fecha: Date.now() - 50000,
+      respuestas: [
+        { autor: "NutriCoach", texto: "Proteína de suero, BCAA y creatina son buenos para recuperación.", likes: 0 }
+      ]
+    }
+  ];
+
   function cargarPreguntas(filtro = 'mas_recientes') {
     const postsList = document.getElementById('posts-list');
     postsList.innerHTML = '';
 
-    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    let preguntas = JSON.parse(localStorage.getItem('preguntas'));
 
-    // Ordenar según filtro
+    if (!preguntas || preguntas.length === 0) {
+      preguntas = defaultPreguntas;
+      localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    }
+
     if (filtro === 'mas_recientes') {
       preguntas.sort((a, b) => b.fecha - a.fecha);
-    } else if (filtro === 'mas_antiguas') {
+    } else {
       preguntas.sort((a, b) => a.fecha - b.fecha);
     }
 
@@ -193,25 +218,25 @@
       const article = document.createElement('article');
       article.className = 'bg-white rounded-lg shadow p-6';
 
-      const totalRespuestas = pregunta.respuestas ? pregunta.respuestas.length : 0;
-      const respuestasTexto = totalRespuestas === 0
-        ? `<span class="flex items-center text-gray-500 text-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.931L3 20l1.931-4.745A7.963 7.963 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>Sin respuestas</span>`
-        : `<span class="flex items-center text-gray-700 text-sm font-medium"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.931L3 20l1.931-4.745A7.963 7.963 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>${totalRespuestas} respuesta${totalRespuestas > 1 ? 's' : ''}</span>`;
-
       article.innerHTML = `
         <header class="mb-4 flex justify-between items-center">
           <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
           <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
           <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
         </header>
-        <div class="mb-4">${respuestasTexto}</div>
+        <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
         <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
-          ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
-            <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
-              <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+          ${(pregunta.respuestas || []).map((resp, ridx) => `
+            <div class="bg-gray-100 rounded p-3 flex justify-between items-start gap-4">
+              <div>
+                <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+                <button class="like-btn text-blue-600 text-sm mt-1" data-pregunta="${idx}" data-respuesta="${ridx}">
+                  👍 Me gusta (<span class="like-count">${resp.likes || 0}</span>)
+                </button>
+              </div>
               <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold ml-4">[X]</button>
             </div>
-          `).join('') : ''}
+          `).join('')}
           <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
             <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
             <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
@@ -219,94 +244,95 @@
           </form>
         </div>
       `;
-
       postsList.appendChild(article);
     });
 
-    // Event listeners para respuestas
+    // Responder
     document.querySelectorAll('.respuesta-form').forEach(form => {
       form.addEventListener('submit', e => {
         e.preventDefault();
-        const idx = parseInt(form.getAttribute('data-index'));
+        const idx = form.getAttribute('data-index');
         const autor = form.querySelector('input').value.trim();
         const texto = form.querySelector('textarea').value.trim();
-        if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
-        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (!autor || !texto) return;
+
+        let preguntas = JSON.parse(localStorage.getItem('preguntas'));
         if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
-        preguntas[idx].respuestas.push({ autor, texto });
+        preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
         localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(filtro);
+        cargarPreguntas(document.getElementById('filtro').value);
       });
     });
 
-    // Botón borrar pregunta
+    // Borrar pregunta
     document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
       btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-index'));
-        if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        const idx = btn.getAttribute('data-index');
+        if (confirm('¿Eliminar esta pregunta?')) {
+          let preguntas = JSON.parse(localStorage.getItem('preguntas'));
           preguntas.splice(idx, 1);
           localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(filtro);
+          cargarPreguntas(document.getElementById('filtro').value);
         }
       });
     });
 
-    // Botón borrar respuesta
+    // Borrar respuesta
     document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
       btn.addEventListener('click', () => {
-        const idx = parseInt(btn.getAttribute('data-pregunta'));
-        const ridx = parseInt(btn.getAttribute('data-respuesta'));
-        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-        if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
-          if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
-            preguntas[idx].respuestas.splice(ridx, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(filtro);
-          }
-        }
+        const p = btn.getAttribute('data-pregunta');
+        const r = btn.getAttribute('data-respuesta');
+        let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+        preguntas[p].respuestas.splice(r, 1);
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+        cargarPreguntas(document.getElementById('filtro').value);
+      });
+    });
+
+    // Likes
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = btn.getAttribute('data-pregunta');
+        const r = btn.getAttribute('data-respuesta');
+        let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+        if (!preguntas[p].respuestas[r].likes) preguntas[p].respuestas[r].likes = 0;
+        preguntas[p].respuestas[r].likes += 1;
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+        cargarPreguntas(document.getElementById('filtro').value);
       });
     });
   }
 
-  // Guardar nueva pregunta desde el formulario
+  // Guardar nueva pregunta
   document.getElementById('new-post-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    const autor = this.querySelector('#author').value.trim();
-    const contenido = this.querySelector('#content').value.trim();
-
-    if (!autor || !contenido) {
-      alert('Por favor, rellena todos los campos de la pregunta.');
-      return;
-    }
-
+    const autor = document.getElementById('author').value.trim();
+    const contenido = document.getElementById('content').value.trim();
+    if (!autor || !contenido) return alert('Rellena todos los campos.');
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-
-    let titulo = contenido.split('.').shift() || contenido;
-
     preguntas.push({
       autor,
       contenido,
-      titulo,
-      respuestas: [],
-      fecha: Date.now()
+      titulo: contenido.split('.')[0],
+      fecha: Date.now(),
+      respuestas: []
     });
-
     localStorage.setItem('preguntas', JSON.stringify(preguntas));
     this.reset();
-
-    alert('¡Tu pregunta ha sido guardada correctamente!');
+    alert('¡Pregunta publicada!');
     cargarPreguntas(document.getElementById('filtro').value);
   });
 
-  // Event listener para filtro de orden
-  document.getElementById('filtro').addEventListener('change', function() {
+  // Filtro
+  document.getElementById('filtro').addEventListener('change', function () {
     cargarPreguntas(this.value);
   });
 
-  // Carga inicial
-  cargarPreguntas(document.getElementById('filtro').value);
-<script>
+  // Inicial
+  window.addEventListener('DOMContentLoaded', () => {
+    cargarPreguntas(document.getElementById('filtro').value);
+  });
+</script>
  
 </body>
 </html>
