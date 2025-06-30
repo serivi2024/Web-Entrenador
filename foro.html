@@ -306,7 +306,165 @@
 
   // Carga inicial
   cargarPreguntas(document.getElementById('filtro').value);
+<script>
+  // --- LIKES ---
+  function agregarLikeHandlers() {
+    document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = btn.getAttribute('data-index');
+        const preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+        cargarPreguntas(document.getElementById('filtro').value);
+      });
+    });
+
+    document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pidx = btn.getAttribute('data-pregunta');
+        const ridx = btn.getAttribute('data-respuesta');
+        const preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        const respuesta = preguntas[pidx]?.respuestas?.[ridx];
+        if (respuesta) {
+          respuesta.likes = (respuesta.likes || 0) + 1;
+          localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          cargarPreguntas(document.getElementById('filtro').value);
+        }
+      });
+    });
+  }
+
+  // Extiende función de renderizado para incluir likes
+  function cargarPreguntas(filtro = 'mas_recientes') {
+    const postsList = document.getElementById('posts-list');
+    postsList.innerHTML = '';
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+
+    if (filtro === 'mas_recientes') {
+      preguntas.sort((a, b) => b.fecha - a.fecha);
+    } else {
+      preguntas.sort((a, b) => a.fecha - b.fecha);
+    }
+
+    preguntas.forEach((pregunta, idx) => {
+      const article = document.createElement('article');
+      article.className = 'bg-white rounded-lg shadow p-6';
+
+      const totalRespuestas = pregunta.respuestas ? pregunta.respuestas.length : 0;
+      const respuestasTexto = totalRespuestas === 0
+        ? `<span class="text-gray-500 text-sm">Sin respuestas</span>`
+        : `<span class="text-gray-700 text-sm font-medium">${totalRespuestas} respuesta${totalRespuestas > 1 ? 's' : ''}</span>`;
+
+      article.innerHTML = `
+        <header class="mb-4 flex justify-between items-center">
+          <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+          <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+          <button data-index="${idx}" class="btn-borrar-pregunta ml-4 text-red-600 hover:text-red-800 font-semibold">[Borrar Pregunta]</button>
+        </header>
+        <div class="flex justify-between items-center mb-4">
+          ${respuestasTexto}
+          <button data-index="${idx}" class="btn-like-pregunta flex items-center text-gray-600 hover:text-blue-600 text-sm font-medium">
+            ❤️ <span class="ml-1">${pregunta.likes || 0}</span>
+          </button>
+        </div>
+        <div class="space-y-4 border-t border-gray-200 pt-4" id="respuestas-${idx}">
+          ${pregunta.respuestas ? pregunta.respuestas.map((resp, ridx) => `
+            <div class="bg-gray-100 rounded p-3 flex justify-between items-center">
+              <p><strong>${resp.autor}:</strong> ${resp.texto}</p>
+              <div class="flex items-center space-x-2">
+                <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-like-respuesta text-gray-500 hover:text-blue-600 text-sm">👍 ${resp.likes || 0}</button>
+                <button data-pregunta="${idx}" data-respuesta="${ridx}" class="btn-borrar-respuesta text-red-600 hover:text-red-800 font-semibold">[X]</button>
+              </div>
+            </div>
+          `).join('') : ''}
+          <form class="mt-4 space-y-2 respuesta-form" data-index="${idx}">
+            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+          </form>
+        </div>
+      `;
+
+      postsList.appendChild(article);
+    });
+
+    // Activar botones como antes
+    document.querySelectorAll('.respuesta-form').forEach(form => {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const idx = parseInt(form.getAttribute('data-index'));
+        const autor = form.querySelector('input').value.trim();
+        const texto = form.querySelector('textarea').value.trim();
+        if (!autor || !texto) return alert('Debes rellenar todos los campos de la respuesta.');
+        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
+        preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
+        localStorage.setItem('preguntas', JSON.stringify(preguntas));
+        cargarPreguntas(filtro);
+      });
+    });
+
+    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-index'));
+        if (confirm('¿Seguro que quieres borrar esta pregunta y todas sus respuestas?')) {
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          preguntas.splice(idx, 1);
+          localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          cargarPreguntas(filtro);
+        }
+      });
+    });
+
+    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-pregunta'));
+        const ridx = parseInt(btn.getAttribute('data-respuesta'));
+        let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+        if (preguntas[idx] && preguntas[idx].respuestas && preguntas[idx].respuestas[ridx]) {
+          if (confirm('¿Seguro que quieres borrar esta respuesta?')) {
+            preguntas[idx].respuestas.splice(ridx, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(filtro);
+          }
+        }
+      });
+    });
+
+    agregarLikeHandlers(); // Activar likes al final
+  }
+
+  document.getElementById('new-post-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const autor = this.querySelector('#author').value.trim();
+    const contenido = this.querySelector('#content').value.trim();
+    if (!autor || !contenido) {
+      alert('Por favor, rellena todos los campos de la pregunta.');
+      return;
+    }
+    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+    let titulo = contenido.split('.').shift() || contenido;
+    preguntas.push({
+      autor,
+      contenido,
+      titulo,
+      respuestas: [],
+      likes: 0,
+      fecha: Date.now()
+    });
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    this.reset();
+    alert('¡Tu pregunta ha sido guardada correctamente!');
+    cargarPreguntas(document.getElementById('filtro').value);
+  });
+
+  document.getElementById('filtro').addEventListener('change', function() {
+    cargarPreguntas(this.value);
+  });
+
+  cargarPreguntas(document.getElementById('filtro').value);
 </script>
+
 
 </body>
 </html>
