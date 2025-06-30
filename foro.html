@@ -8,7 +8,6 @@
   
   <!-- Firebase SDK -->
   <script type="module">
-    // Importar Firebase desde CDN como módulo ES
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 
@@ -22,7 +21,6 @@
       measurementId: "G-18K2P3CEZS"
     };
 
-    // Inicializar Firebase
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
   </script>
