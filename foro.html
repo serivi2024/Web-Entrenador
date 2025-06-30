@@ -70,6 +70,15 @@
       <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
     </section>
 
+    <!-- FILTRO DE ORDEN -->
+    <section class="mb-6 flex justify-end items-center space-x-2">
+      <label for="filter-order" class="font-semibold text-gray-700">Ordenar por:</label>
+      <select id="filter-order" class="p-2 border border-gray-300 rounded">
+        <option value="recientes" selected>Más recientes</option>
+        <option value="antiguas">Más antiguas</option>
+      </select>
+    </section>
+
     <!-- LISTADO DE PREGUNTAS -->
     <section id="posts-list" class="space-y-8">
 
@@ -163,14 +172,30 @@
     // Aquí puedes agregar funcionalidad para responder preguntas más adelante
   </script>
 
-  <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER Y BORRAR --- -->
+  <!-- --- CÓDIGO NUEVO AÑADIDO PARA GUARDAR, RESPONDER, BORRAR Y FILTRAR --- -->
   <script>
+    // Función para ordenar preguntas según filtro
+    function ordenarPreguntas(preguntas, orden) {
+      if (orden === 'antiguas') {
+        return preguntas.sort((a, b) => a.fecha - b.fecha);
+      } else {
+        // Por defecto 'recientes'
+        return preguntas.sort((a, b) => b.fecha - a.fecha);
+      }
+    }
+
     // Función para cargar preguntas y respuestas del localStorage
     function cargarPreguntas() {
       const postsList = document.getElementById('posts-list');
       postsList.innerHTML = '';
 
       let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+
+      // Obtener el filtro actual
+      const orden = document.getElementById('filter-order')?.value || 'recientes';
+
+      // Ordenamos según filtro
+      preguntas = ordenarPreguntas(preguntas, orden);
 
       preguntas.forEach((pregunta, idx) => {
         const article = document.createElement('article');
@@ -248,7 +273,7 @@
       });
     }
 
-    // Guardar nueva pregunta desde el formulario
+    // Guardar nueva pregunta desde el formulario (reemplaza el listener anterior para que guarde)
     document.getElementById('new-post-form').addEventListener('submit', function(e) {
       e.preventDefault();
       const autor = this.querySelector('#author').value.trim();
@@ -268,11 +293,17 @@
         autor,
         contenido,
         titulo,
-        respuestas: []
+        respuestas: [],
+        fecha: Date.now()  // Guardamos fecha aquí
       });
 
       localStorage.setItem('preguntas', JSON.stringify(preguntas));
       this.reset();
+      cargarPreguntas();
+    });
+
+    // Listener para filtro de orden
+    document.getElementById('filter-order').addEventListener('change', () => {
       cargarPreguntas();
     });
 
