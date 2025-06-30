@@ -67,8 +67,7 @@
           Publicar pregunta
         </button>
       </form>
-      <p class="mt-2 text-sm text-gray-500 italic">* Esta es una demo. Las preguntas no se guardan aún.</p>
-      <!-- Nota: Este párrafo se mantiene porque pediste NO eliminar ninguna línea -->
+      <!-- PÁRRAFO DEL TEXTO DEMO ELIMINADO AQUÍ -->
     </section>
 
     <!-- FILTRO VISUAL -->
@@ -203,9 +202,8 @@
 
     let preguntas = JSON.parse(localStorage.getItem('preguntas'));
 
-    if (!preguntas || preguntas.length === 0) {
-      preguntas = defaultPreguntas;
-      localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    if (!preguntas) {
+      preguntas = [];  // <-- Aquí cambio importante para que no reemplace con defaultPreguntas
     }
 
     if (filtro === 'mas_recientes') {
@@ -244,95 +242,129 @@
           </form>
         </div>
       `;
+
       postsList.appendChild(article);
     });
 
-    // Responder
+    // Añadir event listeners para borrar pregunta
+    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-index'));
+        borrarPregunta(idx);
+      });
+    });
+
+    // Event listeners para formularios de respuesta
     document.querySelectorAll('.respuesta-form').forEach(form => {
       form.addEventListener('submit', e => {
         e.preventDefault();
-        const idx = form.getAttribute('data-index');
-        const autor = form.querySelector('input').value.trim();
-        const texto = form.querySelector('textarea').value.trim();
-        if (!autor || !texto) return;
-
-        let preguntas = JSON.parse(localStorage.getItem('preguntas'));
-        if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
-        preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
-        localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(document.getElementById('filtro').value);
+        const idx = parseInt(form.getAttribute('data-index'));
+        const autorInput = form.querySelector('input');
+        const textoInput = form.querySelector('textarea');
+        if (!autorInput.value.trim() || !textoInput.value.trim()) return;
+        agregarRespuesta(idx, autorInput.value.trim(), textoInput.value.trim());
+        autorInput.value = '';
+        textoInput.value = '';
       });
     });
 
-    // Borrar pregunta
-    document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = btn.getAttribute('data-index');
-        if (confirm('¿Eliminar esta pregunta?')) {
-          let preguntas = JSON.parse(localStorage.getItem('preguntas'));
-          preguntas.splice(idx, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
-        }
-      });
-    });
-
-    // Borrar respuesta
-    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const p = btn.getAttribute('data-pregunta');
-        const r = btn.getAttribute('data-respuesta');
-        let preguntas = JSON.parse(localStorage.getItem('preguntas'));
-        preguntas[p].respuestas.splice(r, 1);
-        localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(document.getElementById('filtro').value);
-      });
-    });
-
-    // Likes
+    // Event listeners para likes
     document.querySelectorAll('.like-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const p = btn.getAttribute('data-pregunta');
-        const r = btn.getAttribute('data-respuesta');
-        let preguntas = JSON.parse(localStorage.getItem('preguntas'));
-        if (!preguntas[p].respuestas[r].likes) preguntas[p].respuestas[r].likes = 0;
-        preguntas[p].respuestas[r].likes += 1;
-        localStorage.setItem('preguntas', JSON.stringify(preguntas));
-        cargarPreguntas(document.getElementById('filtro').value);
+        const pidx = parseInt(btn.getAttribute('data-pregunta'));
+        const ridx = parseInt(btn.getAttribute('data-respuesta'));
+        agregarLike(pidx, ridx);
+      });
+    });
+
+    // Event listeners para borrar respuesta
+    document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pidx = parseInt(btn.getAttribute('data-pregunta'));
+        const ridx = parseInt(btn.getAttribute('data-respuesta'));
+        borrarRespuesta(pidx, ridx);
       });
     });
   }
 
-  // Guardar nueva pregunta
+  function guardarPreguntas(preguntas) {
+    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+  }
+
+  function agregarPregunta(autor, contenido) {
+    let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+    if (!preguntas) {
+      preguntas = [];
+    }
+
+    const titulo = contenido.split('.')[0] || contenido; // Simple para título
+
+    preguntas.push({
+      autor,
+      contenido,
+      titulo,
+      fecha: Date.now(),
+      respuestas: []
+    });
+
+    guardarPreguntas(preguntas);
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  function borrarPregunta(idx) {
+    let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+    if (!preguntas) return;
+    preguntas.splice(idx, 1);
+    guardarPreguntas(preguntas);
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  function agregarRespuesta(pidx, autor, texto) {
+    let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+    if (!preguntas) return;
+    if (!preguntas[pidx]) return;
+    if (!preguntas[pidx].respuestas) preguntas[pidx].respuestas = [];
+    preguntas[pidx].respuestas.push({ autor, texto, likes: 0 });
+    guardarPreguntas(preguntas);
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  function borrarRespuesta(pidx, ridx) {
+    let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+    if (!preguntas) return;
+    if (!preguntas[pidx] || !preguntas[pidx].respuestas) return;
+    preguntas[pidx].respuestas.splice(ridx, 1);
+    guardarPreguntas(preguntas);
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  function agregarLike(pidx, ridx) {
+    let preguntas = JSON.parse(localStorage.getItem('preguntas'));
+    if (!preguntas) return;
+    if (!preguntas[pidx] || !preguntas[pidx].respuestas) return;
+    preguntas[pidx].respuestas[ridx].likes = (preguntas[pidx].respuestas[ridx].likes || 0) + 1;
+    guardarPreguntas(preguntas);
+    cargarPreguntas(document.getElementById('filtro').value);
+  }
+
+  // Evento para enviar nueva pregunta
   document.getElementById('new-post-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const autor = document.getElementById('author').value.trim();
     const contenido = document.getElementById('content').value.trim();
-    if (!autor || !contenido) return alert('Rellena todos los campos.');
-    let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-    preguntas.push({
-      autor,
-      contenido,
-      titulo: contenido.split('.')[0],
-      fecha: Date.now(),
-      respuestas: []
-    });
-    localStorage.setItem('preguntas', JSON.stringify(preguntas));
+    if (!autor || !contenido) return alert('Por favor completa todos los campos.');
+    agregarPregunta(autor, contenido);
     this.reset();
-    alert('¡Pregunta publicada!');
-    cargarPreguntas(document.getElementById('filtro').value);
   });
 
-  // Filtro
-  document.getElementById('filtro').addEventListener('change', function () {
+  // Evento para filtro orden
+  document.getElementById('filtro').addEventListener('change', function() {
     cargarPreguntas(this.value);
   });
 
-  // Inicial
-  window.addEventListener('DOMContentLoaded', () => {
-    cargarPreguntas(document.getElementById('filtro').value);
-  });
-</script>
- 
+  // Cargar preguntas al inicio
+  cargarPreguntas();
+  </script>
 </body>
 </html>
+
