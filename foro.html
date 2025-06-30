@@ -178,7 +178,12 @@
 // Función para cargar preguntas y respuestas en el DOM
 function cargarPreguntas(filtro = 'mas_recientes') {
   const postsList = document.getElementById('posts-list');
-  postsList.innerHTML = '';  // Limpiar para evitar duplicados
+
+  // NO borrar el contenido, para mantener preguntas fijas
+  // postsList.innerHTML = '';
+
+  // Calculamos offset por preguntas fijas ya presentes en el DOM
+  const preguntasFijasCount = postsList.querySelectorAll('article').length;
 
   let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
 
@@ -192,7 +197,10 @@ function cargarPreguntas(filtro = 'mas_recientes') {
     const respuestas = pregunta.respuestas || [];
 
     const article = document.createElement('article');
-    article.className = 'bg-white rounded-lg shadow p-6 mb-4';  // mb-4 aquí para espacio
+    article.className = 'bg-white rounded-lg shadow p-6 mb-4';
+
+    // Ajustamos índices con offset
+    const displayIdx = preguntasFijasCount + idx;
 
     article.innerHTML = `
       <header class="mb-4 flex justify-between items-center">
@@ -200,36 +208,39 @@ function cargarPreguntas(filtro = 'mas_recientes') {
         <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
       </header>
       <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
+
       <div class="flex items-center gap-4 text-sm mb-4">
-        <button class="btn-like-pregunta text-blue-600 hover:underline" data-index="${idx}">
+        <button class="btn-like-pregunta text-blue-600 hover:underline" data-index="${displayIdx}">
           👍 Me gusta (${pregunta.likes || 0})
         </button>
         <span class="text-gray-600">💬 ${respuestas.length} respuestas</span>
-        <button class="btn-borrar-pregunta text-red-500 hover:underline" data-index="${idx}">🗑 Borrar</button>
+        <button class="btn-borrar-pregunta text-red-500 hover:underline" data-index="${displayIdx}">🗑 Borrar</button>
       </div>
+
       <div class="space-y-4 border-t border-gray-200 pt-4">
         ${respuestas.map((respuesta, ridx) => `
           <div class="bg-gray-100 rounded p-3">
             <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
             <div class="flex items-center gap-3 text-sm mt-2">
-              <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta="${idx}" data-respuesta="${ridx}">
+              <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta="${displayIdx}" data-respuesta="${ridx}">
                 👍 Me gusta (${respuesta.likes || 0})
               </button>
-              <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta="${idx}" data-respuesta="${ridx}">🗑 Borrar</button>
+              <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta="${displayIdx}" data-respuesta="${ridx}">🗑 Borrar</button>
             </div>
           </div>
         `).join('')}
-        <form class="respuesta-form mt-4 space-y-2" data-index="${idx}">
+        
+        <form class="respuesta-form mt-4 space-y-2" data-index="${displayIdx}">
           <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required>
           <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
           <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
         </form>
       </div>
     `;
-
     postsList.appendChild(article);
   });
 }
+
 
 // Solo 1 vez, elimina duplicados de aquí hacia abajo:
 
@@ -261,8 +272,11 @@ document.getElementById('new-post-form').addEventListener('submit', e => {
 });
 
 document.addEventListener('click', e => {
+  const postsList = document.getElementById('posts-list');
+  const preguntasFijasCount = postsList.querySelectorAll('article').length - (JSON.parse(localStorage.getItem('preguntas')) || []).length;
+
   if (e.target.classList.contains('btn-like-pregunta')) {
-    const idx = e.target.getAttribute('data-index');
+    const idx = parseInt(e.target.getAttribute('data-index')) - preguntasFijasCount;
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[idx]) {
       preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
@@ -272,7 +286,7 @@ document.addEventListener('click', e => {
   }
 
   if (e.target.classList.contains('btn-borrar-pregunta')) {
-    const idx = e.target.getAttribute('data-index');
+    const idx = parseInt(e.target.getAttribute('data-index')) - preguntasFijasCount;
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[idx]) {
       preguntas.splice(idx, 1);
@@ -282,8 +296,8 @@ document.addEventListener('click', e => {
   }
 
   if (e.target.classList.contains('btn-like-respuesta')) {
-    const pIdx = e.target.getAttribute('data-pregunta');
-    const rIdx = e.target.getAttribute('data-respuesta');
+    const pIdx = parseInt(e.target.getAttribute('data-pregunta')) - preguntasFijasCount;
+    const rIdx = parseInt(e.target.getAttribute('data-respuesta'));
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[pIdx] && preguntas[pIdx].respuestas && preguntas[pIdx].respuestas[rIdx]) {
       preguntas[pIdx].respuestas[rIdx].likes = (preguntas[pIdx].respuestas[rIdx].likes || 0) + 1;
@@ -293,8 +307,8 @@ document.addEventListener('click', e => {
   }
 
   if (e.target.classList.contains('btn-borrar-respuesta')) {
-    const pIdx = e.target.getAttribute('data-pregunta');
-    const rIdx = e.target.getAttribute('data-respuesta');
+    const pIdx = parseInt(e.target.getAttribute('data-pregunta')) - preguntasFijasCount;
+    const rIdx = parseInt(e.target.getAttribute('data-respuesta'));
     let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
     if (preguntas[pIdx] && preguntas[pIdx].respuestas && preguntas[pIdx].respuestas[rIdx]) {
       preguntas[pIdx].respuestas.splice(rIdx, 1);
@@ -304,10 +318,15 @@ document.addEventListener('click', e => {
   }
 });
 
+
 document.addEventListener('submit', e => {
   if (e.target.classList.contains('respuesta-form')) {
     e.preventDefault();
-    const idx = e.target.getAttribute('data-index');
+
+    const postsList = document.getElementById('posts-list');
+    const preguntasFijasCount = postsList.querySelectorAll('article').length - (JSON.parse(localStorage.getItem('preguntas')) || []).length;
+
+    const idx = parseInt(e.target.getAttribute('data-index')) - preguntasFijasCount;
     const inputs = e.target.querySelectorAll('input, textarea');
     const autor = inputs[0].value.trim();
     const texto = inputs[1].value.trim();
