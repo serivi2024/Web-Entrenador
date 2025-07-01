@@ -29,7 +29,7 @@
 <body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
 
   <!-- HEADER SIMPLE -->
-  <header class="bg-blue-600 text-white p-4 sticky top-0 shadow-md z-20">
+  <header class="bg-black text-white p-4 sticky top-0 shadow-md z-20">
     <div class="container mx-auto flex justify-between items-center">
       <h1 class="text-xl font-bold">Comunidad Powerlifting</h1>
       <nav class="space-x-4">
@@ -69,7 +69,7 @@
   ></textarea>
   <button
     type="submit"
-    class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
+    class="bg-black text-white px-6 py-3 rounded hover:bg-gray-900 transition"
   >
     Publicar pregunta
   </button>
@@ -93,7 +93,7 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="bg-blue-600 text-white p-6 text-center mt-12">
+  <footer class="bg-black text-white p-6 text-center mt-12">
     <p>&copy; 2025 SergioPowerCoach | Comunidad Powerlifting</p>
   </footer>
 
@@ -123,7 +123,7 @@
   article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200';
   article.setAttribute('data-id', pregunta.id);
   article.innerHTML = `
-    <div class="group-hover:bg-blue-100 transition duration-200 rounded-lg p-1 -m-1">
+    <div class="group-hover:bg-gray-100 transition duration-200 rounded-lg p-1 -m-1">
       <header class="mb-4 flex justify-between items-center relative gap-2">
         <div class="flex-1">
           <div class="bg-gray-300 rounded p-3 text-xl font-semibold text-left group-hover:bg-gray-400 transition">
@@ -137,7 +137,7 @@
         ${pregunta.contenido}
       </div>
       <div class="flex items-center gap-4 text-sm mb-4 relative">
-        <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
+        <button class="btn-like-pregunta text-black hover:underline" data-id="${pregunta.id}">
           👍 Me gusta (${pregunta.likes || 0})
         </button>
         <span class="contador-respuestas text-gray-600 absolute right-0">💬 ${respuestas.length} respuestas</span>
