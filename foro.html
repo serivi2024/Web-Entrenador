@@ -123,9 +123,11 @@
   article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative';
   article.innerHTML = `
     <header class="mb-4 flex justify-between items-center relative gap-2">
-      <h3 class="text-xl font-semibold text-left flex-1">
-        <a href="pregunta.html?id=${pregunta.id}" class="hover:underline text-blue-700">${pregunta.titulo}</a>
-      </h3>
+      <div class="flex-1">
+        <div class="bg-gray-300 rounded p-3 text-xl font-semibold text-left">
+          <a href="pregunta.html?id=${pregunta.id}" class="hover:underline text-blue-700">${pregunta.titulo}</a>
+        </div>
+      </div>
       <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong>${pregunta.autor}</strong></span>
       <button class="btn-borrar-pregunta text-red-500 hover:underline bg-white rounded-full px-2 py-1 shadow flex-shrink-0" data-id="${pregunta.id}">🗑 Borrar</button>
     </header>
@@ -140,7 +142,7 @@
     </div>
     <div class="space-y-4 border-t border-gray-200 pt-4">
       ${respuestas.map((respuesta, ridx) => `
-        <div class="bg-gray-100 rounded p-3">
+        <div class="bg-blue-50 rounded p-3">
           <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
           <div class="flex items-center gap-3 text-sm mt-2">
             <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
