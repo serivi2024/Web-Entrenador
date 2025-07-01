@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pregunta - Comunidad Powerlifting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+  <header class="bg-blue-600 text-white p-4 sticky top-0 shadow-md z-20">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Comunidad Powerlifting</h1>
+      <nav class="space-x-4">
+        <a href="index.html" class="hover:underline">Inicio</a>
+        <a href="blog.html" class="hover:underline">Blog</a>
+        <a href="foro.html" class="underline font-semibold">Comunidad</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container mx-auto flex-grow px-4 py-8 max-w-2xl">
+    <section id="pregunta-detalle" class="mb-12 bg-white rounded-lg shadow p-6"></section>
+  </main>
+  <footer class="bg-blue-600 text-white p-6 text-center mt-12">
+    <p>&copy; 2025 SergioPowerCoach | Comunidad Powerlifting</p>
+  </footer>
+  <script>
+    // Utilidad para obtener parámetros de la URL
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+    const preguntaId = getParam('id');
+    const contenedor = document.getElementById('pregunta-detalle');
+    function renderPregunta() {
+      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+      let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+      if (!pregunta) {
+        contenedor.innerHTML = '<div class="text-center text-red-500">Pregunta no encontrada.</div>';
+        return;
+      }
+      const respuestas = pregunta.respuestas || [];
+      contenedor.innerHTML = `
+        <header class="mb-4 flex justify-between items-center">
+          <h2 class="text-2xl font-bold w-full text-center">${pregunta.titulo}</h2>
+          <button class="btn-borrar-pregunta text-red-500 hover:underline absolute right-6 top-6 z-10 bg-white rounded-full px-2 py-1 shadow" data-id="${pregunta.id}">🗑 Borrar</button>
+        </header>
+        <div class="w-full flex justify-center mb-2">
+          <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+        </div>
+        <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
+          ${pregunta.contenido}
+        </div>
+        <div class="flex items-center gap-4 text-sm mb-4 relative">
+          <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
+            👍 Me gusta (${pregunta.likes || 0})
+          </button>
+          <span class="contador-respuestas text-gray-600 absolute right-0">💬 ${respuestas.length} respuestas</span>
+        </div>
+        <div class="space-y-4 border-t border-gray-200 pt-4">
+          ${respuestas.map((respuesta, ridx) => `
+            <div class="bg-gray-100 rounded p-3">
+              <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
+              <div class="flex items-center gap-3 text-sm mt-2">
+                <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
+                  👍 Me gusta (${respuesta.likes || 0})
+                </button>
+                <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>
+              </div>
+            </div>
+          `).join('')}
+          <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
+            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+          </form>
+        </div>
+      `;
+      asignarEventos();
+    }
+    function asignarEventos() {
+      // Like pregunta
+      document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
+        btn.onclick = () => {
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (pregunta) {
+            pregunta.likes = (pregunta.likes || 0) + 1;
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            renderPregunta();
+          }
+        };
+      });
+      // Borrar pregunta
+      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+        btn.onclick = () => {
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          let idx = preguntas.findIndex(p => String(p.id) === String(preguntaId));
+          if (idx !== -1) {
+            preguntas.splice(idx, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            window.location.href = 'foro.html';
+          }
+        };
+      });
+      // Like respuesta
+      document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
+        btn.onclick = () => {
+          let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
+            pregunta.respuestas[idxRespuesta].likes = (pregunta.respuestas[idxRespuesta].likes || 0) + 1;
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            renderPregunta();
+          }
+        };
+      });
+      // Borrar respuesta
+      document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+        btn.onclick = () => {
+          let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
+            pregunta.respuestas.splice(idxRespuesta, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            renderPregunta();
+          }
+        };
+      });
+      // Formulario respuesta
+      document.querySelectorAll('.respuesta-form').forEach(form => {
+        form.onsubmit = e => {
+          e.preventDefault();
+          const autor = form.querySelector('input').value.trim();
+          const texto = form.querySelector('textarea').value.trim();
+          if (!autor || !texto) return alert('Debes completar ambos campos');
+          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
+          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (pregunta) {
+            if (!pregunta.respuestas) pregunta.respuestas = [];
+            pregunta.respuestas.push({ autor, texto, likes: 0 });
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            renderPregunta();
+          }
+        };
+      });
+    }
+    renderPregunta();
+  </script>
+</body>
+</html>
