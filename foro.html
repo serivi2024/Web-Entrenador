@@ -120,44 +120,46 @@
       preguntas.forEach((pregunta) => {
   const respuestas = pregunta.respuestas || [];
   const article = document.createElement('article');
-  article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative cursor-pointer group';
+  article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200';
   article.setAttribute('data-id', pregunta.id);
   article.innerHTML = `
-    <header class="mb-4 flex justify-between items-center relative gap-2">
-      <div class="flex-1">
-        <div class="bg-gray-300 rounded p-3 text-xl font-semibold text-left group-hover:bg-gray-400 transition">
-          ${pregunta.titulo}
-        </div>
-      </div>
-      <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong>${pregunta.autor}</strong></span>
-      <button class="btn-borrar-pregunta text-red-500 hover:underline bg-white rounded-full px-2 py-1 shadow flex-shrink-0" data-id="${pregunta.id}">🗑 Borrar</button>
-    </header>
-    <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
-      ${pregunta.contenido}
-    </div>
-    <div class="flex items-center gap-4 text-sm mb-4 relative">
-      <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
-        👍 Me gusta (${pregunta.likes || 0})
-      </button>
-      <span class="contador-respuestas text-gray-600 absolute right-0">💬 ${respuestas.length} respuestas</span>
-    </div>
-    <div class="space-y-4 border-t border-gray-200 pt-4">
-      ${respuestas.map((respuesta, ridx) => `
-        <div class="bg-blue-50 rounded p-3">
-          <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
-          <div class="flex items-center gap-3 text-sm mt-2">
-            <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
-              👍 Me gusta (${respuesta.likes || 0})
-            </button>
-            <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>
+    <div class="group-hover:bg-blue-100 transition duration-200 rounded-lg p-1 -m-1">
+      <header class="mb-4 flex justify-between items-center relative gap-2">
+        <div class="flex-1">
+          <div class="bg-gray-300 rounded p-3 text-xl font-semibold text-left group-hover:bg-gray-400 transition">
+            ${pregunta.titulo}
           </div>
         </div>
-      `).join('')}
-      <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
-        <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
-        <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
-      </form>
+        <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong>${pregunta.autor}</strong></span>
+        <button class="btn-borrar-pregunta text-red-500 hover:underline bg-white rounded-full px-2 py-1 shadow flex-shrink-0" data-id="${pregunta.id}">🗑 Borrar</button>
+      </header>
+      <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
+        ${pregunta.contenido}
+      </div>
+      <div class="flex items-center gap-4 text-sm mb-4 relative">
+        <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
+          👍 Me gusta (${pregunta.likes || 0})
+        </button>
+        <span class="contador-respuestas text-gray-600 absolute right-0">💬 ${respuestas.length} respuestas</span>
+      </div>
+      <div class="space-y-4 border-t border-gray-200 pt-4">
+        ${respuestas.map((respuesta, ridx) => `
+          <div class="bg-blue-50 rounded p-3 group-hover:bg-blue-200 transition">
+            <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
+            <div class="flex items-center gap-3 text-sm mt-2">
+              <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
+                👍 Me gusta (${respuesta.likes || 0})
+              </button>
+              <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>
+            </div>
+          </div>
+        `).join('')}
+        <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
+          <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
+          <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
+        </form>
+      </div>
     </div>
   `;
   // Evento para navegar a la pregunta individual al hacer click en el article (excepto en botones)
