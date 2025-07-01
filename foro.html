@@ -123,13 +123,15 @@
         article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative';
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-              <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-              <span class="text-sm text-gray-500 ml-2">por <strong>${pregunta.autor}</strong></span>
-            </div>
+            <h3 class="text-xl font-semibold w-full text-center">${pregunta.titulo}</h3>
             <button class="btn-borrar-pregunta text-red-500 hover:underline absolute right-6 top-6 z-10 bg-white rounded-full px-2 py-1 shadow" data-id="${pregunta.id}">🗑 Borrar</button>
           </header>
-          <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
+          <div class="w-full flex justify-center mb-2">
+            <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+          </div>
+          <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
+            ${pregunta.contenido}
+          </div>
           <div class="flex items-center gap-4 text-sm mb-4 relative">
             <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
               👍 Me gusta (${pregunta.likes || 0})
