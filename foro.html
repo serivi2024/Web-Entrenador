@@ -122,14 +122,12 @@
   const article = document.createElement('article');
   article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative';
   article.innerHTML = `
-    <header class="mb-4 flex justify-between items-center relative">
-      <div class="w-full flex justify-center mb-2 absolute left-0 right-0 top-0">
-        <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
-      </div>
-      <h3 class="text-xl font-semibold text-left w-full mt-6">
+    <header class="mb-4 flex justify-between items-center relative gap-2">
+      <h3 class="text-xl font-semibold text-left flex-1">
         <a href="pregunta.html?id=${pregunta.id}" class="hover:underline text-blue-700">${pregunta.titulo}</a>
       </h3>
-      <button class="btn-borrar-pregunta text-red-500 hover:underline absolute right-6 top-6 z-10 bg-white rounded-full px-2 py-1 shadow" data-id="${pregunta.id}">🗑 Borrar</button>
+      <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong>${pregunta.autor}</strong></span>
+      <button class="btn-borrar-pregunta text-red-500 hover:underline bg-white rounded-full px-2 py-1 shadow flex-shrink-0" data-id="${pregunta.id}">🗑 Borrar</button>
     </header>
     <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
       ${pregunta.contenido}
