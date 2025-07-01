@@ -73,7 +73,6 @@
             </div>
           `).join('')}
           <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
-            <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded bg-gray-50 text-gray-800" required />
             <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y bg-gray-50 text-gray-700" required></textarea>
             <button type="submit" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition font-semibold shadow">Responder</button>
           </form>
@@ -168,7 +167,12 @@
       document.querySelectorAll('.respuesta-form').forEach(form => {
         form.onsubmit = e => {
           e.preventDefault();
-          const autor = form.querySelector('input').value.trim();
+          const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
+          if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+          }
+          const autor = usuario.nombre;
           const texto = form.querySelector('textarea').value.trim();
           if (!autor || !texto) return alert('Debes completar ambos campos');
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
