@@ -119,6 +119,11 @@
 
       preguntas.forEach((pregunta) => {
   const respuestas = pregunta.respuestas || [];
+  // Buscar la respuesta con más likes
+  let respuestaDestacada = null;
+  if (respuestas.length > 0) {
+    respuestaDestacada = respuestas.reduce((max, r) => (r.likes > (max?.likes || 0) ? r : max), respuestas[0]);
+  }
   const article = document.createElement('article');
   article.className = 'bg-gray-50 rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200 border border-gray-200';
   article.setAttribute('data-id', pregunta.id);
@@ -142,6 +147,12 @@
         </button>
         <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
       </div>
+      ${respuestaDestacada ? `
+      <div class='mt-2 bg-gray-50 border border-gray-200 rounded p-3 text-gray-800'>
+        <span class='font-semibold'>${respuestaDestacada.autor}:</span> ${respuestaDestacada.texto}
+        <span class='ml-2 text-xs text-gray-500'>👍 ${respuestaDestacada.likes || 0}</span>
+      </div>
+      ` : ''}
     </div>
   `;
   // Evento para navegar a la pregunta individual al hacer click en el article (excepto en botones)
