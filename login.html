@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acceso a la Comunidad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+  <header class="bg-black text-white p-4 shadow">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-extrabold tracking-tight text-gray-100">Comunidad Powerlifting</h1>
+      <a href="index.html" class="hover:underline text-sm text-gray-200 hover:text-white">← Volver al inicio</a>
+    </div>
+  </header>
+  <main class="flex-grow flex items-center justify-center">
+    <section class="bg-white rounded-lg shadow p-8 w-full max-w-md border border-gray-200">
+      <h2 class="text-2xl font-bold mb-6 text-center text-gray-900">Accede al foro</h2>
+      <form id="login-form" class="space-y-6">
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Entrar como invitado</label>
+          <input type="text" id="guest-name" class="w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-800" placeholder="Nombre o apodo" autocomplete="off" />
+        </div>
+        <div class="flex items-center justify-center my-2 text-gray-500">— o —</div>
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Registrarse con email</label>
+          <input type="text" id="reg-name" class="w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-800 mb-2" placeholder="Nombre" autocomplete="off" />
+          <input type="email" id="reg-email" class="w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-800" placeholder="Correo electrónico" autocomplete="off" />
+        </div>
+        <button type="submit" class="bg-black text-white px-6 py-3 rounded hover:bg-gray-900 transition font-semibold shadow w-full">Entrar</button>
+      </form>
+    </section>
+  </main>
+  <footer class="bg-black text-white p-6 mt-8 text-center">
+    <p>&copy; 2025 SergioPowerCoach | <a href="index.html" class="underline text-gray-200 hover:text-white">Inicio</a></p>
+  </footer>
+  <script>
+    document.getElementById('login-form').onsubmit = function(e) {
+      e.preventDefault();
+      const guestName = document.getElementById('guest-name').value.trim();
+      const regName = document.getElementById('reg-name').value.trim();
+      const regEmail = document.getElementById('reg-email').value.trim();
+      let user = null;
+      if (guestName) {
+        user = { tipo: 'invitado', nombre: guestName };
+      } else if (regName && regEmail) {
+        user = { tipo: 'email', nombre: regName, email: regEmail };
+      } else {
+        alert('Rellena tu nombre como invitado o nombre y correo para registrarte.');
+        return;
+      }
+      localStorage.setItem('usuarioForo', JSON.stringify(user));
+      window.location.href = 'foro.html';
+    };
+  </script>
+</body>
+</html>
