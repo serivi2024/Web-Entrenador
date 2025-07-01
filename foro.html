@@ -120,12 +120,13 @@
       preguntas.forEach((pregunta) => {
   const respuestas = pregunta.respuestas || [];
   const article = document.createElement('article');
-  article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative';
+  article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative cursor-pointer group';
+  article.setAttribute('data-id', pregunta.id);
   article.innerHTML = `
     <header class="mb-4 flex justify-between items-center relative gap-2">
       <div class="flex-1">
-        <div class="bg-gray-300 rounded p-3 text-xl font-semibold text-left">
-          <a href="pregunta.html?id=${pregunta.id}" class="hover:underline text-blue-700">${pregunta.titulo}</a>
+        <div class="bg-gray-300 rounded p-3 text-xl font-semibold text-left group-hover:bg-gray-400 transition">
+          ${pregunta.titulo}
         </div>
       </div>
       <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong>${pregunta.autor}</strong></span>
@@ -159,6 +160,13 @@
       </form>
     </div>
   `;
+  // Evento para navegar a la pregunta individual al hacer click en el article (excepto en botones)
+  article.addEventListener('click', function(e) {
+    const isButton = e.target.closest('button');
+    if (!isButton) {
+      window.location.href = `pregunta.html?id=${pregunta.id}`;
+    }
+  });
   postsList.appendChild(article);
 });
       asignarEventos();
