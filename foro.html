@@ -170,51 +170,44 @@
         preguntas.sort((a, b) => a.fecha - b.fecha);
       }
 
-      preguntas.forEach((pregunta, idx) => {
+      preguntas.forEach((pregunta) => {
         const respuestas = pregunta.respuestas || [];
-
         const article = document.createElement('article');
         article.className = 'bg-white rounded-lg shadow p-6 mb-4';
-
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
             <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
             <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
           </header>
           <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
-
           <div class="flex items-center gap-4 text-sm mb-4">
-            <button class="btn-like-pregunta text-blue-600 hover:underline" data-index="${idx}">
+            <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
               👍 Me gusta (${pregunta.likes || 0})
             </button>
             <span class="text-gray-600">💬 ${respuestas.length} respuestas</span>
-            <button class="btn-borrar-pregunta text-red-500 hover:underline" data-index="${idx}">🗑 Borrar</button>
+            <button class="btn-borrar-pregunta text-red-500 hover:underline" data-id="${pregunta.id}">🗑 Borrar</button>
           </div>
-
           <div class="space-y-4 border-t border-gray-200 pt-4">
             ${respuestas.map((respuesta, ridx) => `
               <div class="bg-gray-100 rounded p-3">
                 <p><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
                 <div class="flex items-center gap-3 text-sm mt-2">
-                  <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta="${idx}" data-respuesta="${ridx}">
+                  <button class="btn-like-respuesta text-blue-600 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
                     👍 Me gusta (${respuesta.likes || 0})
                   </button>
-                  <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta="${idx}" data-respuesta="${ridx}">🗑 Borrar</button>
+                  <button class="btn-borrar-respuesta text-red-500 hover:underline" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>
                 </div>
               </div>
             `).join('')}
-
-            <form class="respuesta-form mt-4 space-y-2" data-index="${idx}">
+            <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
               <input type="text" placeholder="Tu nombre o nick" class="w-full p-2 border border-gray-300 rounded" required />
               <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y" required></textarea>
               <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Responder</button>
             </form>
           </div>
         `;
-
         postsList.appendChild(article);
       });
-
       asignarEventos();
     }
 
@@ -222,63 +215,77 @@
       // Likes preguntas
       document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
         btn.onclick = () => {
-          let idx = parseInt(btn.getAttribute('data-index'));
+          let id = btn.getAttribute('data-id');
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          preguntas[idx].likes = (preguntas[idx].likes || 0) + 1;
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
+          let pregunta = preguntas.find(p => String(p.id) === String(id));
+          if (pregunta) {
+            pregunta.likes = (pregunta.likes || 0) + 1;
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
         };
       });
 
       // Borrar preguntas
       document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
         btn.onclick = () => {
-          let idx = parseInt(btn.getAttribute('data-index'));
+          let id = btn.getAttribute('data-id');
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          preguntas.splice(idx, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
+          let idx = preguntas.findIndex(p => String(p.id) === String(id));
+          if (idx !== -1) {
+            preguntas.splice(idx, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
         };
       });
 
       // Likes respuestas
       document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
         btn.onclick = () => {
-          let idxPregunta = parseInt(btn.getAttribute('data-pregunta'));
+          let preguntaId = btn.getAttribute('data-pregunta-id');
           let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let respuesta = preguntas[idxPregunta].respuestas[idxRespuesta];
-          respuesta.likes = (respuesta.likes || 0) + 1;
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
+          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
+            pregunta.respuestas[idxRespuesta].likes = (pregunta.respuestas[idxRespuesta].likes || 0) + 1;
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
         };
       });
 
       // Borrar respuestas
       document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
         btn.onclick = () => {
-          let idxPregunta = parseInt(btn.getAttribute('data-pregunta'));
+          let preguntaId = btn.getAttribute('data-pregunta-id');
           let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          preguntas[idxPregunta].respuestas.splice(idxRespuesta, 1);
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
+          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
+            pregunta.respuestas.splice(idxRespuesta, 1);
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
         };
       });
 
-      // Formulario respuestas dinámicas (solo uno set)
+      // Formulario respuestas dinámicas
       document.querySelectorAll('.respuesta-form').forEach(form => {
         form.onsubmit = e => {
           e.preventDefault();
-          const idx = parseInt(form.getAttribute('data-index'));
+          const id = form.getAttribute('data-id');
           const autor = form.querySelector('input').value.trim();
           const texto = form.querySelector('textarea').value.trim();
           if (!autor || !texto) return alert('Debes completar ambos campos');
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          if (!preguntas[idx].respuestas) preguntas[idx].respuestas = [];
-          preguntas[idx].respuestas.push({ autor, texto, likes: 0 });
-          localStorage.setItem('preguntas', JSON.stringify(preguntas));
-          cargarPreguntas(document.getElementById('filtro').value);
+          let pregunta = preguntas.find(p => String(p.id) === String(id));
+          if (pregunta) {
+            if (!pregunta.respuestas) pregunta.respuestas = [];
+            pregunta.respuestas.push({ autor, texto, likes: 0 });
+            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
         };
       });
     }
@@ -292,7 +299,8 @@
       if (!autor || !titulo || !contenido) return alert('Completa todos los campos');
 
       let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      preguntas.push({ autor, titulo, contenido, fecha: Date.now(), likes: 0, respuestas: [] });
+      const id = Date.now().toString() + Math.floor(Math.random()*10000).toString();
+      preguntas.push({ id, autor, titulo, contenido, fecha: Date.now(), likes: 0, respuestas: [] });
       localStorage.setItem('preguntas', JSON.stringify(preguntas));
 
       e.target.reset();
