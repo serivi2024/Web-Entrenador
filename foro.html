@@ -120,19 +120,21 @@
       preguntas.forEach((pregunta) => {
         const respuestas = pregunta.respuestas || [];
         const article = document.createElement('article');
-        article.className = 'bg-white rounded-lg shadow p-6 mb-4';
+        article.className = 'bg-white rounded-lg shadow p-6 mb-4 relative';
         article.innerHTML = `
           <header class="mb-4 flex justify-between items-center">
-            <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
-            <span class="text-sm text-gray-500">por <strong>${pregunta.autor}</strong></span>
+            <div class="flex items-center gap-2">
+              <h3 class="text-xl font-semibold">${pregunta.titulo}</h3>
+              <span class="text-sm text-gray-500 ml-2">por <strong>${pregunta.autor}</strong></span>
+            </div>
+            <button class="btn-borrar-pregunta text-red-500 hover:underline absolute right-6 top-6 z-10 bg-white rounded-full px-2 py-1 shadow" data-id="${pregunta.id}">🗑 Borrar</button>
           </header>
           <p class="mb-4 text-gray-700">${pregunta.contenido}</p>
-          <div class="flex items-center gap-4 text-sm mb-4">
+          <div class="flex items-center gap-4 text-sm mb-4 relative">
             <button class="btn-like-pregunta text-blue-600 hover:underline" data-id="${pregunta.id}">
               👍 Me gusta (${pregunta.likes || 0})
             </button>
-            <span class="text-gray-600">💬 ${respuestas.length} respuestas</span>
-            <button class="btn-borrar-pregunta text-red-500 hover:underline" data-id="${pregunta.id}">🗑 Borrar</button>
+            <span class="contador-respuestas text-gray-600 absolute right-0">💬 ${respuestas.length} respuestas</span>
           </div>
           <div class="space-y-4 border-t border-gray-200 pt-4">
             ${respuestas.map((respuesta, ridx) => `
