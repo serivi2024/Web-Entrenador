@@ -46,25 +46,19 @@
     <section class="mb-12 bg-white rounded-lg shadow p-6">
       <h2 class="text-2xl font-bold mb-4 text-gray-800">Plantea tu duda o tema</h2>
       <form id="new-post-form" class="space-y-4">
-  <input
-    type="text"
-    id="author"
-    placeholder="Tu nombre o nick"
-    class="w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-800"
-    required
-  />
+  <!-- El campo de nombre se elimina, se usará el del usuario logueado -->
   <input
     type="text"
     id="title"
     placeholder="Título de tu pregunta"
-    class="w-full p-3 border border-gray-300 rounded bg-gray-50 text-gray-900 font-semibold"
+    class="w-full p-3 border border-gray-300 rounded"
     required
   />
   <textarea
     id="content"
     rows="4"
     placeholder="Describe tu duda, experiencia o tema para debate..."
-    class="w-full p-3 border border-gray-300 rounded resize-y bg-gray-50 text-gray-700"
+    class="w-full p-3 border border-gray-300 rounded resize-y"
     required
   ></textarea>
   <button
@@ -267,10 +261,15 @@
       document.querySelectorAll('.respuesta-form').forEach(form => {
         form.onsubmit = e => {
           e.preventDefault();
+          const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
+          if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+          }
           const id = form.getAttribute('data-id');
-          const autor = form.querySelector('input').value.trim();
+          const autor = usuario.nombre;
           const texto = form.querySelector('textarea').value.trim();
-          if (!autor || !texto) return alert('Debes completar ambos campos');
+          if (!autor || !texto) return alert('Debes completar el campo de respuesta');
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
           let pregunta = preguntas.find(p => String(p.id) === String(id));
           if (pregunta) {
@@ -286,7 +285,12 @@
     // Listener para form preguntas nuevas (solo uno, no duplicar) (CORREGIDO)
     document.getElementById('new-post-form').addEventListener('submit', e => {
       e.preventDefault();
-      const autor = e.target.querySelector('#author').value.trim();
+      const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
+      if (!usuario) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const autor = usuario.nombre;
       const titulo = e.target.querySelector('#title').value.trim();
       const contenido = e.target.querySelector('#content').value.trim();
       if (!autor || !titulo || !contenido) return alert('Completa todos los campos');
