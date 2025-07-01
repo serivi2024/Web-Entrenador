@@ -98,6 +98,11 @@
   </footer>
 
   <script>
+    // Redirección a login si no hay usuario
+    if (!localStorage.getItem('usuarioForo')) {
+      window.location.href = 'login.html';
+    }
+
     // Guardamos la cuenta fija una vez para usar siempre (MODIFICADO)
     const postsList = document.getElementById('posts-list');
     const preguntasFijasCount = postsList.querySelectorAll('article').length;
@@ -168,14 +173,30 @@
     }
 
     function asignarEventos() {
+      const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
       // Likes preguntas
       document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
         btn.onclick = () => {
           let id = btn.getAttribute('data-id');
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
           let pregunta = preguntas.find(p => String(p.id) === String(id));
+          if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+          }
+          // Limitar a un like por usuario por pregunta
+          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
+          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
+          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
+          if (userLikes.preguntas[id]) {
+            alert('Solo puedes dar un like por pregunta.');
+            return;
+          }
           if (pregunta) {
             pregunta.likes = (pregunta.likes || 0) + 1;
+            userLikes.preguntas[id] = true;
+            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
+            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
             localStorage.setItem('preguntas', JSON.stringify(preguntas));
             cargarPreguntas(document.getElementById('filtro').value);
           }
@@ -203,8 +224,24 @@
           let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
           let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
           let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+          if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+          }
+          // Limitar a un like por usuario por respuesta
+          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
+          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
+          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
+          let respuestaKey = preguntaId + '-' + idxRespuesta;
+          if (userLikes.respuestas[respuestaKey]) {
+            alert('Solo puedes dar un like por respuesta.');
+            return;
+          }
           if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
             pregunta.respuestas[idxRespuesta].likes = (pregunta.respuestas[idxRespuesta].likes || 0) + 1;
+            userLikes.respuestas[respuestaKey] = true;
+            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
+            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
             localStorage.setItem('preguntas', JSON.stringify(preguntas));
             cargarPreguntas(document.getElementById('filtro').value);
           }
