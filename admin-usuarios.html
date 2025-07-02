@@ -26,6 +26,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
@@ -38,6 +39,19 @@
     };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Permitir acceso solo si hay sesión de invitado (localStorage) o sesión Auth
+    function checkAccess() {
+      const userLocal = localStorage.getItem('usuarioForo');
+      onAuthStateChanged(auth, (user) => {
+        if (!userLocal && !user) {
+          window.location.href = 'login.html';
+          throw new Error('Redirigiendo a login');
+        }
+      });
+    }
+    checkAccess();
 
     const adminEmail = "sergiosfmtc@gmail.com";
     const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
