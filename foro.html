@@ -9,7 +9,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, arrayUnion, arrayRemove, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
@@ -20,272 +20,81 @@
       appId: "1:571520460029:web:2c942e15addfe92d164a94",
       measurementId: "G-18K2P3CEZS"
     };
-
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-  </script>
-  
-</head>
-<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+    const db = getFirestore(app);
 
-  <!-- HEADER SIMPLE -->
-  <header class="bg-black text-white p-4 sticky top-0 shadow-md z-20">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold tracking-tight text-gray-100">Comunidad Powerlifting</h1>
-      <nav class="space-x-4">
-        <a href="index.html" class="hover:underline text-gray-200 hover:text-white">Inicio</a>
-        <a href="blog.html" class="hover:underline text-gray-200 hover:text-white">Blog</a>
-        <a href="comunidad.html" class="underline font-semibold text-white">Comunidad</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="container mx-auto flex-grow px-4 py-8 max-w-4xl">
-
-    <!-- NUEVA PREGUNTA -->
-    <section class="mb-12 bg-white rounded-lg shadow p-6">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800">Plantea tu duda o tema</h2>
-      <form id="new-post-form" class="space-y-4">
-  <!-- El campo de nombre se elimina, se usará el del usuario logueado -->
-  <input
-    type="text"
-    id="title"
-    placeholder="Título de tu pregunta"
-    class="w-full p-3 border border-gray-300 rounded"
-    required
-  />
-  <textarea
-    id="content"
-    rows="4"
-    placeholder="Describe tu duda, experiencia o tema para debate..."
-    class="w-full p-3 border border-gray-300 rounded resize-y"
-    required
-  ></textarea>
-  <button
-    type="submit"
-    class="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition font-semibold shadow"
-  >
-    Publicar pregunta
-  </button>
-</form>
-      <!-- Nota: Este párrafo se mantiene porque pediste NO eliminar ninguna línea -->
-    </section>
-
-    <!-- FILTRO VISUAL -->
-    <section class="mb-8 bg-white rounded-lg shadow p-4 flex items-center space-x-4">
-      <label for="filtro" class="font-semibold text-gray-700">Ordenar por:</label>
-      <select id="filtro" class="border border-gray-300 rounded p-2 bg-gray-50 text-gray-800">
-        <option value="mas_recientes">Más recientes</option>
-        <option value="mas_antiguas">Más antiguas</option>
-      </select>
-    </section>
-
-    <!-- LISTADO DE PREGUNTAS -->
-    <section id="posts-list" class="space-y-8">
-      <!-- Aquí se cargarán dinámicamente las preguntas -->
-    </section>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="bg-black text-white p-6 text-center mt-12">
-    <p>&copy; 2025 SergioPowerCoach | Comunidad Powerlifting</p>
-  </footer>
-
-  <script>
     // Redirección a login si no hay usuario
     if (!localStorage.getItem('usuarioForo')) {
       window.location.href = 'login.html';
     }
-
-    // Guardamos la cuenta fija una vez para usar siempre (MODIFICADO)
+    const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
     const postsList = document.getElementById('posts-list');
     const preguntasFijasCount = postsList.querySelectorAll('article').length;
 
-    // Función para cargar preguntas dinámicas en el DOM sin tocar preguntas fijas
-    function cargarPreguntas(filtro = 'mas_recientes') {
-      // Eliminamos solo preguntas dinámicas (después de las preguntas fijas)
+    // Leer preguntas de Firestore y renderizar
+    async function cargarPreguntas(filtro = 'mas_recientes') {
       while (postsList.children.length > preguntasFijasCount) {
         postsList.removeChild(postsList.lastChild);
       }
-
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-
-      if (filtro === 'mas_recientes') {
-        preguntas.sort((a, b) => b.fecha - a.fecha);
-      } else {
-        preguntas.sort((a, b) => a.fecha - b.fecha);
-      }
-
+      let preguntas = [];
+      const q = query(collection(db, 'preguntas'), orderBy('fecha', filtro === 'mas_recientes' ? 'desc' : 'asc'));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(docSnap => {
+        let data = docSnap.data();
+        data.id = docSnap.id;
+        preguntas.push(data);
+      });
       preguntas.forEach((pregunta) => {
-  const respuestas = pregunta.respuestas || [];
-  // Buscar la respuesta con más likes
-  let respuestaDestacada = null;
-  if (respuestas.length > 0) {
-    respuestaDestacada = respuestas.reduce((max, r) => (r.likes > (max?.likes || 0) ? r : max), respuestas[0]);
-  }
-  const article = document.createElement('article');
-  article.className = 'bg-gray-50 rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200 border border-gray-200';
-  article.setAttribute('data-id', pregunta.id);
-  article.innerHTML = `
-    <div class="group-hover:bg-gray-100 transition duration-200 rounded-lg p-1 -m-1">
-      <header class="mb-4 flex justify-between items-center relative gap-2">
-        <div class="flex-1">
-          <div class="bg-gray-200 rounded p-3 text-xl font-semibold text-left text-gray-900 group-hover:bg-gray-300 transition">
-            ${pregunta.titulo}
+        const respuestas = pregunta.respuestas || [];
+        let respuestaDestacada = null;
+        if (respuestas.length > 0) {
+          respuestaDestacada = respuestas.reduce((max, r) => (r.likes > (max?.likes || 0) ? r : max), respuestas[0]);
+        }
+        const article = document.createElement('article');
+        article.className = 'bg-gray-50 rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200 border border-gray-200';
+        article.setAttribute('data-id', pregunta.id);
+        article.innerHTML = `
+          <div class="group-hover:bg-gray-100 transition duration-200 rounded-lg p-1 -m-1">
+            <header class="mb-4 flex justify-between items-center relative gap-2">
+              <div class="flex-1">
+                <div class="bg-gray-200 rounded p-3 text-xl font-semibold text-left text-gray-900 group-hover:bg-gray-300 transition">
+                  ${pregunta.titulo}
+                </div>
+              </div>
+              <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
+              <button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>
+            </header>
+            <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
+              ${pregunta.contenido}
+            </div>
+            <div class="flex items-center gap-4 text-sm mb-4 relative">
+              <button class="btn-like-pregunta text-gray-700 hover:text-black font-semibold" data-id="${pregunta.id}">
+                👍 Me gusta (${pregunta.likes || 0})
+              </button>
+              <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
+            </div>
+            ${respuestaDestacada ? `
+            <div class='mt-2 bg-gray-50 border border-gray-200 rounded p-3 text-gray-800'>
+              <span class='font-semibold'>${respuestaDestacada.autor}:</span> ${respuestaDestacada.texto}
+              <span class='ml-2 text-xs text-gray-500'>👍 ${respuestaDestacada.likes || 0}</span>
+            </div>
+            ` : ''}
           </div>
-        </div>
-        <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
-        <button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>
-      </header>
-      <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
-        ${pregunta.contenido}
-      </div>
-      <div class="flex items-center gap-4 text-sm mb-4 relative">
-        <button class="btn-like-pregunta text-gray-700 hover:text-black font-semibold" data-id="${pregunta.id}">
-          👍 Me gusta (${pregunta.likes || 0})
-        </button>
-        <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
-      </div>
-      ${respuestaDestacada ? `
-      <div class='mt-2 bg-gray-50 border border-gray-200 rounded p-3 text-gray-800'>
-        <span class='font-semibold'>${respuestaDestacada.autor}:</span> ${respuestaDestacada.texto}
-        <span class='ml-2 text-xs text-gray-500'>👍 ${respuestaDestacada.likes || 0}</span>
-      </div>
-      ` : ''}
-    </div>
-  `;
-  // Evento para navegar a la pregunta individual al hacer click en el article (excepto en botones)
-  article.addEventListener('click', function(e) {
-    const isButton = e.target.closest('button');
-    if (!isButton) {
-      window.location.href = `pregunta.html?id=${pregunta.id}`;
-    }
-  });
-  postsList.appendChild(article);
-});
+        `;
+        article.addEventListener('click', function(e) {
+          const isButton = e.target.closest('button');
+          if (!isButton) {
+            window.location.href = `pregunta.html?id=${pregunta.id}`;
+          }
+        });
+        postsList.appendChild(article);
+      });
       asignarEventos();
     }
 
-    function asignarEventos() {
-      const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
-      // Likes preguntas
-      document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
-        btn.onclick = () => {
-          let id = btn.getAttribute('data-id');
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(id));
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          // Limitar a un like por usuario por pregunta
-          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
-          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
-          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
-          if (userLikes.preguntas[id]) {
-            alert('Solo puedes dar un like por pregunta.');
-            return;
-          }
-          if (pregunta) {
-            pregunta.likes = (pregunta.likes || 0) + 1;
-            userLikes.preguntas[id] = true;
-            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
-            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-
-      // Borrar preguntas
-      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-        btn.onclick = () => {
-          let id = btn.getAttribute('data-id');
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let idx = preguntas.findIndex(p => String(p.id) === String(id));
-          if (idx !== -1) {
-            preguntas.splice(idx, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-
-      // Likes respuestas
-      document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
-        btn.onclick = () => {
-          let preguntaId = btn.getAttribute('data-pregunta-id');
-          let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          // Limitar a un like por usuario por respuesta
-          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
-          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
-          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
-          let respuestaKey = preguntaId + '-' + idxRespuesta;
-          if (userLikes.respuestas[respuestaKey]) {
-            alert('Solo puedes dar un like por respuesta.');
-            return;
-          }
-          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
-            pregunta.respuestas[idxRespuesta].likes = (pregunta.respuestas[idxRespuesta].likes || 0) + 1;
-            userLikes.respuestas[respuestaKey] = true;
-            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
-            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-
-      // Borrar respuestas
-      document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-        btn.onclick = () => {
-          let preguntaId = btn.getAttribute('data-pregunta-id');
-          let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
-          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
-            pregunta.respuestas.splice(idxRespuesta, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-
-      // Formulario respuestas dinámicas
-      document.querySelectorAll('.respuesta-form').forEach(form => {
-        form.onsubmit = e => {
-          e.preventDefault();
-          const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          const id = form.getAttribute('data-id');
-          const autor = usuario.nombre;
-          const texto = form.querySelector('textarea').value.trim();
-          if (!autor || !texto) return alert('Debes completar el campo de respuesta');
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(id));
-          if (pregunta) {
-            if (!pregunta.respuestas) pregunta.respuestas = [];
-            pregunta.respuestas.push({ autor, texto, likes: 0 });
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-    }
-
-    // Listener para form preguntas nuevas (solo uno, no duplicar) (CORREGIDO)
-    document.getElementById('new-post-form').addEventListener('submit', e => {
+    // Publicar nueva pregunta en Firestore
+    document.getElementById('new-post-form').addEventListener('submit', async e => {
       e.preventDefault();
-      const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
       if (!usuario) {
         window.location.href = 'login.html';
         return;
@@ -294,12 +103,9 @@
       const titulo = e.target.querySelector('#title').value.trim();
       const contenido = e.target.querySelector('#content').value.trim();
       if (!autor || !titulo || !contenido) return alert('Completa todos los campos');
-
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      const id = Date.now().toString() + Math.floor(Math.random()*10000).toString();
-      preguntas.push({ id, autor, titulo, contenido, fecha: Date.now(), likes: 0, respuestas: [] });
-      localStorage.setItem('preguntas', JSON.stringify(preguntas));
-
+      await addDoc(collection(db, 'preguntas'), {
+        autor, titulo, contenido, fecha: Date.now(), likes: 0, respuestas: []
+      });
       e.target.reset();
       cargarPreguntas(document.getElementById('filtro').value);
     });
@@ -309,9 +115,74 @@
       cargarPreguntas(document.getElementById('filtro').value);
     });
 
+    // Likes y respuestas
+    function asignarEventos() {
+      // Likes preguntas
+      document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
+        btn.onclick = async () => {
+          let id = btn.getAttribute('data-id');
+          if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+          }
+          // Limitar a un like por usuario por pregunta (local)
+          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
+          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
+          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
+          if (userLikes.preguntas[id]) {
+            alert('Solo puedes dar un like por pregunta.');
+            return;
+          }
+          // Actualizar likes en Firestore
+          const preguntaRef = doc(db, 'preguntas', id);
+          const preguntaSnap = await getDocs(query(collection(db, 'preguntas')));
+          let pregunta = null;
+          preguntaSnap.forEach(d => { if (d.id === id) pregunta = d.data(); });
+          if (pregunta) {
+            await updateDoc(preguntaRef, { likes: (pregunta.likes || 0) + 1 });
+            userLikes.preguntas[id] = true;
+            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
+            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
+        };
+      });
+      // Borrar preguntas
+      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+        btn.onclick = async () => {
+          let id = btn.getAttribute('data-id');
+          await deleteDoc(doc(db, 'preguntas', id));
+          cargarPreguntas(document.getElementById('filtro').value);
+        };
+      });
+      // Formulario respuestas dinámicas
+      document.querySelectorAll('.respuesta-form').forEach(form => {
+        form.onsubmit = async e => {
+          e.preventDefault();
+          if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+          }
+          const id = form.getAttribute('data-id');
+          const autor = usuario.nombre;
+          const texto = form.querySelector('textarea').value.trim();
+          if (!autor || !texto) return alert('Debes completar el campo de respuesta');
+          // Añadir respuesta a Firestore
+          const preguntaRef = doc(db, 'preguntas', id);
+          const preguntaSnap = await getDocs(query(collection(db, 'preguntas')));
+          let pregunta = null;
+          preguntaSnap.forEach(d => { if (d.id === id) pregunta = d.data(); });
+          if (pregunta) {
+            const nuevasRespuestas = [...(pregunta.respuestas || []), { autor, texto, likes: 0 }];
+            await updateDoc(preguntaRef, { respuestas: nuevasRespuestas });
+            cargarPreguntas(document.getElementById('filtro').value);
+          }
+        };
+      });
+    }
+
     // Carga inicial
     cargarPreguntas();
-
   </script>
 
 </body>
