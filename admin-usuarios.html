@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usuarios registrados - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+  <header class="bg-black text-white p-4 shadow">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-extrabold tracking-tight text-gray-100">Panel de Administración</h1>
+      <a href="index.html" class="hover:underline text-sm text-gray-200 hover:text-white">← Volver al inicio</a>
+    </div>
+  </header>
+  <main class="flex-grow flex items-center justify-center">
+    <section class="bg-white rounded-lg shadow p-8 w-full max-w-2xl border border-gray-200 mt-8">
+      <h2 class="text-2xl font-bold mb-6 text-center text-gray-900">Usuarios registrados</h2>
+      <div id="admin-warning" class="text-red-600 text-center mb-4 hidden">Acceso restringido solo para el administrador.</div>
+      <div id="usuarios-lista"></div>
+    </section>
+  </main>
+  <footer class="bg-black text-white p-6 mt-8 text-center">
+    <p>&copy; 2025 SergioPowerCoach | <a href="index.html" class="underline text-gray-200 hover:text-white">Inicio</a></p>
+  </footer>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
+      authDomain: "sergiopowercoach-foro.firebaseapp.com",
+      projectId: "sergiopowercoach-foro",
+      storageBucket: "sergiopowercoach-foro.appspot.com",
+      messagingSenderId: "571520460029",
+      appId: "1:571520460029:web:2c942e15addfe92d164a94",
+      measurementId: "G-18K2P3CEZS"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const adminEmail = "sergiosfmtc@gmail.com";
+    const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
+    const warning = document.getElementById('admin-warning');
+    const lista = document.getElementById('usuarios-lista');
+
+    if (!usuario || usuario.email !== adminEmail) {
+      warning.classList.remove('hidden');
+      lista.innerHTML = '<div class="text-center text-gray-500">No tienes permiso para ver esta página.</div>';
+      throw new Error('Acceso denegado');
+    }
+
+    async function cargarUsuarios() {
+      const snap = await getDocs(collection(db, 'usuarios'));
+      if (snap.empty) {
+        lista.innerHTML = '<div class="text-center text-gray-500">No hay usuarios registrados.</div>';
+        return;
+      }
+      let html = `<table class='w-full text-left border border-gray-200 rounded'><thead><tr><th class='p-2 border-b'>Nombre</th><th class='p-2 border-b'>Email</th><th class='p-2 border-b'>Tipo</th><th class='p-2 border-b'>Fecha</th></tr></thead><tbody>`;
+      snap.forEach(doc => {
+        const u = doc.data();
+        html += `<tr><td class='p-2 border-b'>${u.nombre || ''}</td><td class='p-2 border-b'>${u.email || '-'}</td><td class='p-2 border-b'>${u.tipo}</td><td class='p-2 border-b text-xs'>${u.fecha ? new Date(u.fecha).toLocaleString() : '-'}</td></tr>`;
+      });
+      html += '</tbody></table>';
+      lista.innerHTML = html;
+    }
+    cargarUsuarios();
+  </script>
+</body>
+</html>
