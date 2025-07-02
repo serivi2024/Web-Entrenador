@@ -24,12 +24,9 @@
     <p>&copy; 2025 SergioPowerCoach | Comunidad Powerlifting</p>
   </footer>
   <script type="module">
-    if (!localStorage.getItem('usuarioForo')) {
-      window.location.href = 'login.html';
-      throw new Error('Redirigiendo a login');
-    }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDoc, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
@@ -42,6 +39,19 @@
     };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // Permitir acceso solo si hay sesión de invitado (localStorage) o sesión Auth
+    function checkAccess() {
+      const userLocal = localStorage.getItem('usuarioForo');
+      onAuthStateChanged(auth, (user) => {
+        if (!userLocal && !user) {
+          window.location.href = 'login.html';
+          throw new Error('Redirigiendo a login');
+        }
+      });
+    }
+    checkAccess();
 
     const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
     const preguntaId = (new URL(window.location.href)).searchParams.get('id');
