@@ -34,8 +34,23 @@
   <footer class="bg-black text-white p-6 mt-8 text-center">
     <p>&copy; 2025 SergioPowerCoach | <a href="index.html" class="underline text-gray-200 hover:text-white">Inicio</a></p>
   </footer>
-  <script>
-    document.getElementById('login-form').onsubmit = function(e) {
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
+      authDomain: "sergiopowercoach-foro.firebaseapp.com",
+      projectId: "sergiopowercoach-foro",
+      storageBucket: "sergiopowercoach-foro.appspot.com",
+      messagingSenderId: "571520460029",
+      appId: "1:571520460029:web:2c942e15addfe92d164a94",
+      measurementId: "G-18K2P3CEZS"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById('login-form').onsubmit = async function(e) {
       e.preventDefault();
       const guestName = document.getElementById('guest-name').value.trim();
       const regName = document.getElementById('reg-name').value.trim();
@@ -50,6 +65,28 @@
         return;
       }
       localStorage.setItem('usuarioForo', JSON.stringify(user));
+      // Guardar usuario en Firestore si no existe
+      try {
+        let existe = false;
+        if (user.tipo === 'email') {
+          const q = query(collection(db, 'usuarios'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          existe = !snap.empty;
+        } else {
+          const q = query(collection(db, 'usuarios'), where('nombre', '==', user.nombre), where('tipo', '==', 'invitado'));
+          const snap = await getDocs(q);
+          existe = !snap.empty;
+        }
+        if (!existe) {
+          await addDoc(collection(db, 'usuarios'), {
+            ...user,
+            fecha: new Date().toISOString()
+          });
+        }
+      } catch (err) {
+        // No bloquear el login si falla el guardado
+        console.error('Error guardando usuario en Firestore:', err);
+      }
       window.location.href = 'foro.html';
     };
   </script>
