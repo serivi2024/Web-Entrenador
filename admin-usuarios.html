@@ -14,6 +14,7 @@
     </div>
   </header>
   <main class="flex-grow flex items-center justify-center">
+    <div id="access-message" class="text-center text-gray-500 mb-4"></div>
     <section class="bg-white rounded-lg shadow p-8 w-full max-w-2xl border border-gray-200 mt-8">
       <h2 class="text-2xl font-bold mb-6 text-center text-gray-900">Usuarios registrados</h2>
       <div id="admin-warning" class="text-red-600 text-center mb-4 hidden">Acceso restringido solo para el administrador.</div>
@@ -41,14 +42,19 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Permitir acceso solo si hay sesión de invitado (localStorage) o sesión Auth
     function checkAccess() {
+      const msg = document.getElementById('access-message');
+      msg.textContent = 'Comprobando acceso...';
       const userLocal = localStorage.getItem('usuarioForo');
       onAuthStateChanged(auth, (user) => {
         if (!userLocal && !user) {
-          window.location.href = 'login.html';
-          throw new Error('Redirigiendo a login');
+          msg.textContent = 'Redirigiendo a login...';
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 800);
+          return;
         }
+        msg.textContent = '';
       });
     }
     checkAccess();
