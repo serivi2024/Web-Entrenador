@@ -9,8 +9,8 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, arrayUnion, arrayRemove, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
@@ -25,177 +25,22 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Permitir acceso solo si hay sesión de invitado (localStorage) o sesión Auth
     function checkAccess() {
+      const msg = document.getElementById('access-message');
+      msg.textContent = 'Comprobando acceso...';
       const userLocal = localStorage.getItem('usuarioForo');
       onAuthStateChanged(auth, (user) => {
         if (!userLocal && !user) {
-          window.location.href = 'login.html';
-          throw new Error('Redirigiendo a login');
+          msg.textContent = 'Redirigiendo a login...';
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 800);
+          return;
         }
+        msg.textContent = '';
       });
     }
     checkAccess();
-
-    const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
-    const postsList = document.getElementById('posts-list');
-    const preguntasFijasCount = postsList.querySelectorAll('article').length;
-
-    // Leer preguntas de Firestore y renderizar
-    async function cargarPreguntas(filtro = 'mas_recientes') {
-      while (postsList.children.length > preguntasFijasCount) {
-        postsList.removeChild(postsList.lastChild);
-      }
-      let preguntas = [];
-      const q = query(collection(db, 'preguntas'), orderBy('fecha', filtro === 'mas_recientes' ? 'desc' : 'asc'));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach(docSnap => {
-        let data = docSnap.data();
-        data.id = docSnap.id;
-        preguntas.push(data);
-      });
-      preguntas.forEach((pregunta) => {
-        const respuestas = pregunta.respuestas || [];
-        let respuestaDestacada = null;
-        if (respuestas.length > 0) {
-          respuestaDestacada = respuestas.reduce((max, r) => (r.likes > (max?.likes || 0) ? r : max), respuestas[0]);
-        }
-        const esAdmin = usuario.email === 'sergiosfmtc@gmail.com';
-        const puedeBorrarPregunta = esAdmin || (usuario.nombre === pregunta.autor && (!usuario.email || usuario.email === pregunta.email));
-        const article = document.createElement('article');
-        article.className = 'bg-gray-50 rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200 border border-gray-200';
-        article.setAttribute('data-id', pregunta.id);
-        article.innerHTML = `
-          <div class="group-hover:bg-gray-100 transition duration-200 rounded-lg p-1 -m-1">
-            <header class="mb-4 flex justify-between items-center relative gap-2">
-              <div class="flex-1">
-                <div class="bg-gray-200 rounded p-3 text-xl font-semibold text-left text-gray-900 group-hover:bg-gray-300 transition">
-                  ${pregunta.titulo}
-                </div>
-              </div>
-              <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
-              ${puedeBorrarPregunta ? `<button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>` : ''}
-            </header>
-            <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
-              ${pregunta.contenido}
-            </div>
-            <div class="flex items-center gap-4 text-sm mb-4 relative">
-              <button class="btn-like-pregunta text-gray-700 hover:text-black font-semibold" data-id="${pregunta.id}">
-                👍 Me gusta (${pregunta.likes || 0})
-              </button>
-              <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
-            </div>
-            ${respuestaDestacada ? `
-            <div class='mt-2 bg-gray-50 border border-gray-200 rounded p-3 text-gray-800'>
-              <span class='font-semibold'>${respuestaDestacada.autor}:</span> ${respuestaDestacada.texto}
-              <span class='ml-2 text-xs text-gray-500'>👍 ${respuestaDestacada.likes || 0}</span>
-              ${(esAdmin || (usuario.nombre === respuestaDestacada.autor && (!usuario.email || usuario.email === respuestaDestacada.email))) ? `<button class='btn-borrar-respuesta text-gray-400 hover:text-red-500 ml-2' data-pregunta-id='${pregunta.id}' data-respuesta='${respuestas.indexOf(respuestaDestacada)}'>🗑 Borrar</button>` : ''}
-            </div>
-            ` : ''}
-          </div>
-        `;
-        article.addEventListener('click', function(e) {
-          const isButton = e.target.closest('button');
-          if (!isButton) {
-            window.location.href = `pregunta.html?id=${pregunta.id}`;
-          }
-        });
-        postsList.appendChild(article);
-      });
-      asignarEventos();
-    }
-
-    // Publicar nueva pregunta en Firestore
-    document.getElementById('new-post-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      if (!usuario) {
-        window.location.href = 'login.html';
-        return;
-      }
-      const autor = usuario.nombre;
-      const titulo = e.target.querySelector('#title').value.trim();
-      const contenido = e.target.querySelector('#content').value.trim();
-      if (!autor || !titulo || !contenido) return alert('Completa todos los campos');
-      await addDoc(collection(db, 'preguntas'), {
-        autor, titulo, contenido, fecha: Date.now(), likes: 0, respuestas: []
-      });
-      e.target.reset();
-      cargarPreguntas(document.getElementById('filtro').value);
-    });
-
-    // Cambiar filtro
-    document.getElementById('filtro').addEventListener('change', () => {
-      cargarPreguntas(document.getElementById('filtro').value);
-    });
-
-    // Likes y respuestas
-    function asignarEventos() {
-      // Likes preguntas
-      document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
-        btn.onclick = async () => {
-          let id = btn.getAttribute('data-id');
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          // Limitar a un like por usuario por pregunta (local)
-          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
-          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
-          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
-          if (userLikes.preguntas[id]) {
-            alert('Solo puedes dar un like por pregunta.');
-            return;
-          }
-          // Actualizar likes en Firestore
-          const preguntaRef = doc(db, 'preguntas', id);
-          const preguntaSnap = await getDocs(query(collection(db, 'preguntas')));
-          let pregunta = null;
-          preguntaSnap.forEach(d => { if (d.id === id) pregunta = d.data(); });
-          if (pregunta) {
-            await updateDoc(preguntaRef, { likes: (pregunta.likes || 0) + 1 });
-            userLikes.preguntas[id] = true;
-            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
-            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-      // Borrar preguntas
-      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-        btn.onclick = async () => {
-          let id = btn.getAttribute('data-id');
-          await deleteDoc(doc(db, 'preguntas', id));
-          cargarPreguntas(document.getElementById('filtro').value);
-        };
-      });
-      // Formulario respuestas dinámicas
-      document.querySelectorAll('.respuesta-form').forEach(form => {
-        form.onsubmit = async e => {
-          e.preventDefault();
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          const id = form.getAttribute('data-id');
-          const autor = usuario.nombre;
-          const texto = form.querySelector('textarea').value.trim();
-          if (!autor || !texto) return alert('Debes completar el campo de respuesta');
-          // Añadir respuesta a Firestore
-          const preguntaRef = doc(db, 'preguntas', id);
-          const preguntaSnap = await getDocs(query(collection(db, 'preguntas')));
-          let pregunta = null;
-          preguntaSnap.forEach(d => { if (d.id === id) pregunta = d.data(); });
-          if (pregunta) {
-            const nuevasRespuestas = [...(pregunta.respuestas || []), { autor, texto, likes: 0 }];
-            await updateDoc(preguntaRef, { respuestas: nuevasRespuestas });
-            cargarPreguntas(document.getElementById('filtro').value);
-          }
-        };
-      });
-    }
-
-    // Carga inicial
-    cargarPreguntas();
   </script>
 
 </body>
