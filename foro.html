@@ -50,6 +50,8 @@
         if (respuestas.length > 0) {
           respuestaDestacada = respuestas.reduce((max, r) => (r.likes > (max?.likes || 0) ? r : max), respuestas[0]);
         }
+        const esAdmin = usuario.email === 'sergiosfmtc@gmail.com';
+        const puedeBorrarPregunta = esAdmin || (usuario.nombre === pregunta.autor && (!usuario.email || usuario.email === pregunta.email));
         const article = document.createElement('article');
         article.className = 'bg-gray-50 rounded-lg shadow p-6 mb-4 relative cursor-pointer group transition duration-200 border border-gray-200';
         article.setAttribute('data-id', pregunta.id);
@@ -62,7 +64,7 @@
                 </div>
               </div>
               <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
-              <button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>
+              ${puedeBorrarPregunta ? `<button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>` : ''}
             </header>
             <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
               ${pregunta.contenido}
@@ -77,6 +79,7 @@
             <div class='mt-2 bg-gray-50 border border-gray-200 rounded p-3 text-gray-800'>
               <span class='font-semibold'>${respuestaDestacada.autor}:</span> ${respuestaDestacada.texto}
               <span class='ml-2 text-xs text-gray-500'>👍 ${respuestaDestacada.likes || 0}</span>
+              ${(esAdmin || (usuario.nombre === respuestaDestacada.autor && (!usuario.email || usuario.email === respuestaDestacada.email))) ? `<button class='btn-borrar-respuesta text-gray-400 hover:text-red-500 ml-2' data-pregunta-id='${pregunta.id}' data-respuesta='${respuestas.indexOf(respuestaDestacada)}'>🗑 Borrar</button>` : ''}
             </div>
             ` : ''}
           </div>
