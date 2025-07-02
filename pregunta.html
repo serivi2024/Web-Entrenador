@@ -23,25 +23,38 @@
   <footer class="bg-black text-white p-6 text-center mt-12">
     <p>&copy; 2025 SergioPowerCoach | Comunidad Powerlifting</p>
   </footer>
-  <script>
-    // Redirección a login si no hay usuario
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, getDoc, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
+      authDomain: "sergiopowercoach-foro.firebaseapp.com",
+      projectId: "sergiopowercoach-foro",
+      storageBucket: "sergiopowercoach-foro.appspot.com",
+      messagingSenderId: "571520460029",
+      appId: "1:571520460029:web:2c942e15addfe92d164a94",
+      measurementId: "G-18K2P3CEZS"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     if (!localStorage.getItem('usuarioForo')) {
       window.location.href = 'login.html';
     }
-    // Utilidad para obtener parámetros de la URL
-    function getParam(name) {
-      const url = new URL(window.location.href);
-      return url.searchParams.get(name);
-    }
-    const preguntaId = getParam('id');
+    const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
+    const preguntaId = (new URL(window.location.href)).searchParams.get('id');
     const contenedor = document.getElementById('pregunta-detalle');
-    function renderPregunta() {
-      let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-      let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
-      if (!pregunta) {
+
+    async function renderPregunta() {
+      const docRef = doc(db, 'preguntas', preguntaId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
         contenedor.innerHTML = '<div class="text-center text-red-500">Pregunta no encontrada.</div>';
         return;
       }
+      const pregunta = docSnap.data();
+      pregunta.id = preguntaId;
       const respuestas = pregunta.respuestas || [];
       contenedor.innerHTML = `
         <header class="mb-4 flex justify-between items-center relative gap-2">
@@ -78,20 +91,17 @@
           </form>
         </div>
       `;
-      asignarEventos();
+      asignarEventos(pregunta);
     }
-    function asignarEventos() {
-      const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
+
+    function asignarEventos(pregunta) {
       // Like pregunta
       document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
-        btn.onclick = () => {
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
+        btn.onclick = async () => {
           if (!usuario) {
             window.location.href = 'login.html';
             return;
           }
-          // Limitar a un like por usuario por pregunta
           let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
           if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
           let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
@@ -99,39 +109,33 @@
             alert('Solo puedes dar un like por pregunta.');
             return;
           }
-          if (pregunta) {
-            pregunta.likes = (pregunta.likes || 0) + 1;
+          const preguntaRef = doc(db, 'preguntas', preguntaId);
+          const docSnap = await getDoc(preguntaRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            await updateDoc(preguntaRef, { likes: (data.likes || 0) + 1 });
             userLikes.preguntas[preguntaId] = true;
             likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
             localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
             renderPregunta();
           }
         };
       });
       // Borrar pregunta
       document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-        btn.onclick = () => {
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let idx = preguntas.findIndex(p => String(p.id) === String(preguntaId));
-          if (idx !== -1) {
-            preguntas.splice(idx, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
-            window.location.href = 'foro.html';
-          }
+        btn.onclick = async () => {
+          await deleteDoc(doc(db, 'preguntas', preguntaId));
+          window.location.href = 'foro.html';
         };
       });
       // Like respuesta
       document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
           if (!usuario) {
             window.location.href = 'login.html';
             return;
           }
-          // Limitar a un like por usuario por respuesta
           let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
           if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
           let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
@@ -140,34 +144,39 @@
             alert('Solo puedes dar un like por respuesta.');
             return;
           }
-          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
-            pregunta.respuestas[idxRespuesta].likes = (pregunta.respuestas[idxRespuesta].likes || 0) + 1;
+          const preguntaRef = doc(db, 'preguntas', preguntaId);
+          const docSnap = await getDoc(preguntaRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const respuestas = data.respuestas || [];
+            respuestas[idxRespuesta].likes = (respuestas[idxRespuesta].likes || 0) + 1;
+            await updateDoc(preguntaRef, { respuestas });
             userLikes.respuestas[respuestaKey] = true;
             likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
             localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
             renderPregunta();
           }
         };
       });
       // Borrar respuesta
       document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
-          if (pregunta && pregunta.respuestas && pregunta.respuestas[idxRespuesta]) {
-            pregunta.respuestas.splice(idxRespuesta, 1);
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          const preguntaRef = doc(db, 'preguntas', preguntaId);
+          const docSnap = await getDoc(preguntaRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const respuestas = data.respuestas || [];
+            respuestas.splice(idxRespuesta, 1);
+            await updateDoc(preguntaRef, { respuestas });
             renderPregunta();
           }
         };
       });
       // Formulario respuesta
       document.querySelectorAll('.respuesta-form').forEach(form => {
-        form.onsubmit = e => {
+        form.onsubmit = async e => {
           e.preventDefault();
-          const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
           if (!usuario) {
             window.location.href = 'login.html';
             return;
@@ -175,12 +184,12 @@
           const autor = usuario.nombre;
           const texto = form.querySelector('textarea').value.trim();
           if (!autor || !texto) return alert('Debes completar ambos campos');
-          let preguntas = JSON.parse(localStorage.getItem('preguntas')) || [];
-          let pregunta = preguntas.find(p => String(p.id) === String(preguntaId));
-          if (pregunta) {
-            if (!pregunta.respuestas) pregunta.respuestas = [];
-            pregunta.respuestas.push({ autor, texto, likes: 0 });
-            localStorage.setItem('preguntas', JSON.stringify(preguntas));
+          const preguntaRef = doc(db, 'preguntas', preguntaId);
+          const docSnap = await getDoc(preguntaRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const respuestas = [...(data.respuestas || []), { autor, texto, likes: 0 }];
+            await updateDoc(preguntaRef, { respuestas });
             renderPregunta();
           }
         };
