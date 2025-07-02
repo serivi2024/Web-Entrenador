@@ -24,6 +24,10 @@
     <p>&copy; 2025 SergioPowerCoach | Comunidad Powerlifting</p>
   </footer>
   <script type="module">
+    if (!localStorage.getItem('usuarioForo')) {
+      window.location.href = 'login.html';
+      throw new Error('Redirigiendo a login');
+    }
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, getDoc, getDocs, updateDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
@@ -39,9 +43,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    if (!localStorage.getItem('usuarioForo')) {
-      window.location.href = 'login.html';
-    }
     const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
     const preguntaId = (new URL(window.location.href)).searchParams.get('id');
     const contenedor = document.getElementById('pregunta-detalle');
