@@ -37,6 +37,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
@@ -49,6 +50,7 @@
     };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     document.getElementById('login-form').onsubmit = async function(e) {
       e.preventDefault();
@@ -58,37 +60,60 @@
       let user = null;
       if (guestName) {
         user = { tipo: 'invitado', nombre: guestName };
+        localStorage.setItem('usuarioForo', JSON.stringify(user));
+        window.location.href = 'foro.html';
+        return;
       } else if (regName && regEmail) {
+        // Login/registro con Firebase Auth (sin contraseña visible, se genera una por defecto)
+        const fakePassword = 'powercoach2025';
+        try {
+          // Intentar registrar usuario
+          await createUserWithEmailAndPassword(auth, regEmail, fakePassword);
+        } catch (err) {
+          if (err.code === 'auth/email-already-in-use') {
+            // Si ya existe, intentar login
+            try {
+              await signInWithEmailAndPassword(auth, regEmail, fakePassword);
+            } catch (err2) {
+              alert('No se pudo iniciar sesión. Contacta al administrador.');
+              return;
+            }
+          } else {
+            alert('Error en el registro: ' + err.message);
+            return;
+          }
+        }
+        // Guardar usuario en localStorage y Firestore
         user = { tipo: 'email', nombre: regName, email: regEmail };
+        localStorage.setItem('usuarioForo', JSON.stringify(user));
+        // Guardar usuario en Firestore si no existe
+        try {
+          let existe = false;
+          const q = query(collection(db, 'usuarios'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          existe = !snap.empty;
+          if (!existe) {
+            await addDoc(collection(db, 'usuarios'), {
+              ...user,
+              fecha: new Date().toISOString()
+            });
+          }
+        } catch (err) {
+          console.error('Error guardando usuario en Firestore:', err);
+        }
+        window.location.href = 'foro.html';
       } else {
         alert('Rellena tu nombre como invitado o nombre y correo para registrarte.');
         return;
       }
-      localStorage.setItem('usuarioForo', JSON.stringify(user));
-      // Guardar usuario en Firestore si no existe
-      try {
-        let existe = false;
-        if (user.tipo === 'email') {
-          const q = query(collection(db, 'usuarios'), where('email', '==', user.email));
-          const snap = await getDocs(q);
-          existe = !snap.empty;
-        } else {
-          const q = query(collection(db, 'usuarios'), where('nombre', '==', user.nombre), where('tipo', '==', 'invitado'));
-          const snap = await getDocs(q);
-          existe = !snap.empty;
-        }
-        if (!existe) {
-          await addDoc(collection(db, 'usuarios'), {
-            ...user,
-            fecha: new Date().toISOString()
-          });
-        }
-      } catch (err) {
-        // No bloquear el login si falla el guardado
-        console.error('Error guardando usuario en Firestore:', err);
-      }
-      window.location.href = 'foro.html';
     };
+
+    // Si ya hay sesión activa, redirigir directo al foro
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = 'foro.html';
+      }
+    });
   </script>
 </body>
 </html>
