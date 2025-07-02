@@ -56,13 +56,15 @@
       const pregunta = docSnap.data();
       pregunta.id = preguntaId;
       const respuestas = pregunta.respuestas || [];
+      const esAdmin = usuario.email === 'sergiosfmtc@gmail.com';
+      const puedeBorrarPregunta = esAdmin || (usuario.nombre === pregunta.autor && (!usuario.email || usuario.email === pregunta.email));
       contenedor.innerHTML = `
         <header class="mb-4 flex justify-between items-center relative gap-2">
           <div class="flex-1">
             <div class="bg-gray-200 rounded p-3 text-2xl font-bold text-left text-gray-900">${pregunta.titulo}</div>
           </div>
           <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
-          <button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>
+          ${puedeBorrarPregunta ? `<button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>` : ''}
         </header>
         <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
           ${pregunta.contenido}
@@ -74,17 +76,20 @@
           <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
         </div>
         <div class="space-y-4 border-t border-gray-200 pt-4">
-          ${respuestas.map((respuesta, ridx) => `
+          ${respuestas.map((respuesta, ridx) => {
+            const puedeBorrarRespuesta = esAdmin || (usuario.nombre === respuesta.autor && (!usuario.email || usuario.email === respuesta.email));
+            return `
             <div class="bg-gray-50 rounded p-3 border border-gray-200">
               <p class='text-gray-800'><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
               <div class="flex items-center gap-3 text-sm mt-2">
                 <button class="btn-like-respuesta text-gray-700 hover:text-black font-semibold" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
                   👍 Me gusta (${respuesta.likes || 0})
                 </button>
-                <button class="btn-borrar-respuesta text-gray-400 hover:text-red-500" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>
+                ${puedeBorrarRespuesta ? `<button class="btn-borrar-respuesta text-gray-400 hover:text-red-500" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>` : ''}
               </div>
             </div>
-          `).join('')}
+            `;
+          }).join('')}
           <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
             <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y bg-gray-50 text-gray-700" required></textarea>
             <button type="submit" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition font-semibold shadow">Responder</button>
