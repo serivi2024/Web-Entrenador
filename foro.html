@@ -9,7 +9,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where, addDoc, updateDoc, doc, deleteDoc, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, arrayUnion, arrayRemove, deleteDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -43,20 +43,24 @@
     }
 
     async function start() {
-      const userLocal = localStorage.getItem('usuarioForo');
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          usuario = await getUsuarioAuth(user);
-        } else if (userLocal) {
-          usuario = JSON.parse(userLocal);
-        } else {
-          msg.textContent = 'Redirigiendo a login...';
-          setTimeout(() => { window.location.href = 'login.html'; }, 1000);
-          return;
-        }
-        msg.textContent = '';
-        main();
-      });
+      try {
+        const userLocal = localStorage.getItem('usuarioForo');
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            usuario = await getUsuarioAuth(user);
+          } else if (userLocal) {
+            usuario = JSON.parse(userLocal);
+          } else {
+            msg.textContent = 'Redirigiendo a login...';
+            setTimeout(() => { window.location.href = 'login.html'; }, 1000);
+            return;
+          }
+          msg.textContent = '';
+          main();
+        });
+      } catch (err) {
+        msg.textContent = 'Error: ' + (err.message || err);
+      }
     }
 
     // ...mueve aquí toda la lógica principal de la página, usando la variable global usuario...
