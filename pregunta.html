@@ -26,7 +26,7 @@
   </footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -42,183 +42,202 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // Permitir acceso solo si hay sesión de invitado (localStorage) o sesión Auth
-    function checkAccess() {
-      const msg = document.getElementById('access-message');
-      msg.textContent = 'Comprobando acceso...';
+    const msg = document.getElementById('access-message');
+    msg.textContent = 'Comprobando acceso...';
+
+    let usuario = null;
+    function getUsuarioAuth(user) {
+      return new Promise(async (resolve) => {
+        // Buscar en Firestore el nombre del usuario por email
+        const q = query(collection(db, 'usuarios'), where('email', '==', user.email));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const data = snap.docs[0].data();
+          resolve({ tipo: 'email', nombre: data.nombre, email: user.email });
+        } else {
+          resolve({ tipo: 'email', nombre: user.email, email: user.email });
+        }
+      });
+    }
+
+    async function start() {
       const userLocal = localStorage.getItem('usuarioForo');
-      onAuthStateChanged(auth, (user) => {
-        if (!userLocal && !user) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          usuario = await getUsuarioAuth(user);
+        } else if (userLocal) {
+          usuario = JSON.parse(userLocal);
+        } else {
           msg.textContent = 'Redirigiendo a login...';
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 800);
+          setTimeout(() => { window.location.href = 'login.html'; }, 1000);
           return;
         }
         msg.textContent = '';
+        main();
       });
     }
-    checkAccess();
 
-    const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
     const preguntaId = (new URL(window.location.href)).searchParams.get('id');
     const contenedor = document.getElementById('pregunta-detalle');
 
-    async function renderPregunta() {
-      const docRef = doc(db, 'preguntas', preguntaId);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        contenedor.innerHTML = '<div class="text-center text-red-500">Pregunta no encontrada.</div>';
-        return;
-      }
-      const pregunta = docSnap.data();
-      pregunta.id = preguntaId;
-      const respuestas = pregunta.respuestas || [];
-      const esAdmin = usuario.email === 'sergiosfmtc@gmail.com';
-      const puedeBorrarPregunta = esAdmin || (usuario.nombre === pregunta.autor && (!usuario.email || usuario.email === pregunta.email));
-      contenedor.innerHTML = `
-        <header class="mb-4 flex justify-between items-center relative gap-2">
-          <div class="flex-1">
-            <div class="bg-gray-200 rounded p-3 text-2xl font-bold text-left text-gray-900">${pregunta.titulo}</div>
-          </div>
-          <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
-          ${puedeBorrarPregunta ? `<button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>` : ''}
-        </header>
-        <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
-          ${pregunta.contenido}
-        </div>
-        <div class="flex items-center gap-4 text-sm mb-4 relative">
-          <button class="btn-like-pregunta text-gray-700 hover:text-black font-semibold" data-id="${pregunta.id}">
-            👍 Me gusta (${pregunta.likes || 0})
-          </button>
-          <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
-        </div>
-        <div class="space-y-4 border-t border-gray-200 pt-4">
-          ${respuestas.map((respuesta, ridx) => {
-            const puedeBorrarRespuesta = esAdmin || (usuario.nombre === respuesta.autor && (!usuario.email || usuario.email === respuesta.email));
-            return `
-            <div class="bg-gray-50 rounded p-3 border border-gray-200">
-              <p class='text-gray-800'><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
-              <div class="flex items-center gap-3 text-sm mt-2">
-                <button class="btn-like-respuesta text-gray-700 hover:text-black font-semibold" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
-                  👍 Me gusta (${respuesta.likes || 0})
-                </button>
-                ${puedeBorrarRespuesta ? `<button class="btn-borrar-respuesta text-gray-400 hover:text-red-500" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>` : ''}
-              </div>
+    async function main() {
+      async function renderPregunta() {
+        const docRef = doc(db, 'preguntas', preguntaId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          contenedor.innerHTML = '<div class="text-center text-red-500">Pregunta no encontrada.</div>';
+          return;
+        }
+        const pregunta = docSnap.data();
+        pregunta.id = preguntaId;
+        const respuestas = pregunta.respuestas || [];
+        const esAdmin = usuario.email === 'sergiosfmtc@gmail.com';
+        const puedeBorrarPregunta = esAdmin || (usuario.nombre === pregunta.autor && (!usuario.email || usuario.email === pregunta.email));
+        contenedor.innerHTML = `
+          <header class="mb-4 flex justify-between items-center relative gap-2">
+            <div class="flex-1">
+              <div class="bg-gray-200 rounded p-3 text-2xl font-bold text-left text-gray-900">${pregunta.titulo}</div>
             </div>
-            `;
-          }).join('')}
-          <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
-            <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y bg-gray-50 text-gray-700" required></textarea>
-            <button type="submit" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition font-semibold shadow">Responder</button>
-          </form>
-        </div>
-      `;
-      asignarEventos(pregunta);
-    }
+            <span class="text-sm text-gray-500 text-center flex-shrink-0 mx-4">por <strong class='text-gray-700'>${pregunta.autor}</strong></span>
+            ${puedeBorrarPregunta ? `<button class="btn-borrar-pregunta text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow flex-shrink-0 border border-gray-200" data-id="${pregunta.id}">🗑 Borrar</button>` : ''}
+          </header>
+          <div class="mb-4 bg-gray-100 rounded p-4 text-gray-700 border border-gray-200">
+            ${pregunta.contenido}
+          </div>
+          <div class="flex items-center gap-4 text-sm mb-4 relative">
+            <button class="btn-like-pregunta text-gray-700 hover:text-black font-semibold" data-id="${pregunta.id}">
+              👍 Me gusta (${pregunta.likes || 0})
+            </button>
+            <span class="contador-respuestas text-gray-500 absolute right-0">💬 ${respuestas.length} respuestas</span>
+          </div>
+          <div class="space-y-4 border-t border-gray-200 pt-4">
+            ${respuestas.map((respuesta, ridx) => {
+              const puedeBorrarRespuesta = esAdmin || (usuario.nombre === respuesta.autor && (!usuario.email || usuario.email === respuesta.email));
+              return `
+              <div class="bg-gray-50 rounded p-3 border border-gray-200">
+                <p class='text-gray-800'><strong>${respuesta.autor}:</strong> ${respuesta.texto}</p>
+                <div class="flex items-center gap-3 text-sm mt-2">
+                  <button class="btn-like-respuesta text-gray-700 hover:text-black font-semibold" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">
+                    👍 Me gusta (${respuesta.likes || 0})
+                  </button>
+                  ${puedeBorrarRespuesta ? `<button class="btn-borrar-respuesta text-gray-400 hover:text-red-500" data-pregunta-id="${pregunta.id}" data-respuesta="${ridx}">🗑 Borrar</button>` : ''}
+                </div>
+              </div>
+              `;
+            }).join('')}
+            <form class="respuesta-form mt-4 space-y-2" data-id="${pregunta.id}">
+              <textarea rows="2" placeholder="Escribe tu respuesta..." class="w-full p-2 border border-gray-300 rounded resize-y bg-gray-50 text-gray-700" required></textarea>
+              <button type="submit" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-900 transition font-semibold shadow">Responder</button>
+            </form>
+          </div>
+        `;
+        asignarEventos(pregunta);
+      }
 
-    function asignarEventos(pregunta) {
-      // Like pregunta
-      document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
-        btn.onclick = async () => {
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
-          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
-          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
-          if (userLikes.preguntas[preguntaId]) {
-            alert('Solo puedes dar un like por pregunta.');
-            return;
-          }
-          const preguntaRef = doc(db, 'preguntas', preguntaId);
-          const docSnap = await getDoc(preguntaRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            await updateDoc(preguntaRef, { likes: (data.likes || 0) + 1 });
-            userLikes.preguntas[preguntaId] = true;
-            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
-            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            renderPregunta();
-          }
-        };
-      });
-      // Borrar pregunta
-      document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
-        btn.onclick = async () => {
-          await deleteDoc(doc(db, 'preguntas', preguntaId));
-          window.location.href = 'foro.html';
-        };
-      });
-      // Like respuesta
-      document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
-        btn.onclick = async () => {
-          let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
-          if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
-          let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
-          let respuestaKey = preguntaId + '-' + idxRespuesta;
-          if (userLikes.respuestas[respuestaKey]) {
-            alert('Solo puedes dar un like por respuesta.');
-            return;
-          }
-          const preguntaRef = doc(db, 'preguntas', preguntaId);
-          const docSnap = await getDoc(preguntaRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const respuestas = data.respuestas || [];
-            respuestas[idxRespuesta].likes = (respuestas[idxRespuesta].likes || 0) + 1;
-            await updateDoc(preguntaRef, { respuestas });
-            userLikes.respuestas[respuestaKey] = true;
-            likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
-            localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
-            renderPregunta();
-          }
-        };
-      });
-      // Borrar respuesta
-      document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
-        btn.onclick = async () => {
-          let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
-          const preguntaRef = doc(db, 'preguntas', preguntaId);
-          const docSnap = await getDoc(preguntaRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const respuestas = data.respuestas || [];
-            respuestas.splice(idxRespuesta, 1);
-            await updateDoc(preguntaRef, { respuestas });
-            renderPregunta();
-          }
-        };
-      });
-      // Formulario respuesta
-      document.querySelectorAll('.respuesta-form').forEach(form => {
-        form.onsubmit = async e => {
-          e.preventDefault();
-          if (!usuario) {
-            window.location.href = 'login.html';
-            return;
-          }
-          const autor = usuario.nombre;
-          const texto = form.querySelector('textarea').value.trim();
-          if (!autor || !texto) return alert('Debes completar ambos campos');
-          const preguntaRef = doc(db, 'preguntas', preguntaId);
-          const docSnap = await getDoc(preguntaRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const respuestas = [...(data.respuestas || []), { autor, texto, likes: 0 }];
-            await updateDoc(preguntaRef, { respuestas });
-            renderPregunta();
-          }
-        };
-      });
+      function asignarEventos(pregunta) {
+        // Like pregunta
+        document.querySelectorAll('.btn-like-pregunta').forEach(btn => {
+          btn.onclick = async () => {
+            if (!usuario) {
+              window.location.href = 'login.html';
+              return;
+            }
+            let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
+            if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
+            let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
+            if (userLikes.preguntas[preguntaId]) {
+              alert('Solo puedes dar un like por pregunta.');
+              return;
+            }
+            const preguntaRef = doc(db, 'preguntas', preguntaId);
+            const docSnap = await getDoc(preguntaRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              await updateDoc(preguntaRef, { likes: (data.likes || 0) + 1 });
+              userLikes.preguntas[preguntaId] = true;
+              likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
+              localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
+              renderPregunta();
+            }
+          };
+        });
+        // Borrar pregunta
+        document.querySelectorAll('.btn-borrar-pregunta').forEach(btn => {
+          btn.onclick = async () => {
+            await deleteDoc(doc(db, 'preguntas', preguntaId));
+            window.location.href = 'foro.html';
+          };
+        });
+        // Like respuesta
+        document.querySelectorAll('.btn-like-respuesta').forEach(btn => {
+          btn.onclick = async () => {
+            let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
+            if (!usuario) {
+              window.location.href = 'login.html';
+              return;
+            }
+            let likesUsuario = JSON.parse(localStorage.getItem('likesUsuario')) || {};
+            if (!likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)]) likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = { preguntas: {}, respuestas: {} };
+            let userLikes = likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)];
+            let respuestaKey = preguntaId + '-' + idxRespuesta;
+            if (userLikes.respuestas[respuestaKey]) {
+              alert('Solo puedes dar un like por respuesta.');
+              return;
+            }
+            const preguntaRef = doc(db, 'preguntas', preguntaId);
+            const docSnap = await getDoc(preguntaRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const respuestas = data.respuestas || [];
+              respuestas[idxRespuesta].likes = (respuestas[idxRespuesta].likes || 0) + 1;
+              await updateDoc(preguntaRef, { respuestas });
+              userLikes.respuestas[respuestaKey] = true;
+              likesUsuario[usuario.tipo + ':' + (usuario.email || usuario.nombre)] = userLikes;
+              localStorage.setItem('likesUsuario', JSON.stringify(likesUsuario));
+              renderPregunta();
+            }
+          };
+        });
+        // Borrar respuesta
+        document.querySelectorAll('.btn-borrar-respuesta').forEach(btn => {
+          btn.onclick = async () => {
+            let idxRespuesta = parseInt(btn.getAttribute('data-respuesta'));
+            const preguntaRef = doc(db, 'preguntas', preguntaId);
+            const docSnap = await getDoc(preguntaRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const respuestas = data.respuestas || [];
+              respuestas.splice(idxRespuesta, 1);
+              await updateDoc(preguntaRef, { respuestas });
+              renderPregunta();
+            }
+          };
+        });
+        // Formulario respuesta
+        document.querySelectorAll('.respuesta-form').forEach(form => {
+          form.onsubmit = async e => {
+            e.preventDefault();
+            if (!usuario) {
+              window.location.href = 'login.html';
+              return;
+            }
+            const autor = usuario.nombre;
+            const texto = form.querySelector('textarea').value.trim();
+            if (!autor || !texto) return alert('Debes completar ambos campos');
+            const preguntaRef = doc(db, 'preguntas', preguntaId);
+            const docSnap = await getDoc(preguntaRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              const respuestas = [...(data.respuestas || []), { autor, texto, likes: 0 }];
+              await updateDoc(preguntaRef, { respuestas });
+              renderPregunta();
+            }
+          };
+        });
+      }
+      renderPregunta();
     }
-    renderPregunta();
+    start();
   </script>
 </body>
 </html>
