@@ -9,8 +9,8 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where, addDoc, updateDoc, doc, deleteDoc, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAHwg5fSQNvDzhxOeRiOXUqKb2Y52JTxFs",
@@ -25,22 +25,42 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    function checkAccess() {
-      const msg = document.getElementById('access-message');
-      msg.textContent = 'Comprobando acceso...';
+    const msg = document.getElementById('access-message');
+    msg.textContent = 'Comprobando acceso...';
+
+    let usuario = null;
+    function getUsuarioAuth(user) {
+      return new Promise(async (resolve) => {
+        const q = query(collection(db, 'usuarios'), where('email', '==', user.email));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const data = snap.docs[0].data();
+          resolve({ tipo: 'email', nombre: data.nombre, email: user.email });
+        } else {
+          resolve({ tipo: 'email', nombre: user.email, email: user.email });
+        }
+      });
+    }
+
+    async function start() {
       const userLocal = localStorage.getItem('usuarioForo');
-      onAuthStateChanged(auth, (user) => {
-        if (!userLocal && !user) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          usuario = await getUsuarioAuth(user);
+        } else if (userLocal) {
+          usuario = JSON.parse(userLocal);
+        } else {
           msg.textContent = 'Redirigiendo a login...';
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 800);
+          setTimeout(() => { window.location.href = 'login.html'; }, 1000);
           return;
         }
         msg.textContent = '';
+        main();
       });
     }
-    checkAccess();
+
+    // ...mueve aquí toda la lógica principal de la página, usando la variable global usuario...
+    start();
   </script>
 
 </body>
