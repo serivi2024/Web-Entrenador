@@ -26,7 +26,7 @@
   </footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -42,49 +42,68 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    function checkAccess() {
-      const msg = document.getElementById('access-message');
-      msg.textContent = 'Comprobando acceso...';
+    const msg = document.getElementById('access-message');
+    msg.textContent = 'Comprobando acceso...';
+
+    let usuario = null;
+    function getUsuarioAuth(user) {
+      return new Promise(async (resolve) => {
+        const q = query(collection(db, 'usuarios'), where('email', '==', user.email));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const data = snap.docs[0].data();
+          resolve({ tipo: 'email', nombre: data.nombre, email: user.email });
+        } else {
+          resolve({ tipo: 'email', nombre: user.email, email: user.email });
+        }
+      });
+    }
+
+    async function start() {
       const userLocal = localStorage.getItem('usuarioForo');
-      onAuthStateChanged(auth, (user) => {
-        if (!userLocal && !user) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          usuario = await getUsuarioAuth(user);
+        } else if (userLocal) {
+          usuario = JSON.parse(userLocal);
+        } else {
           msg.textContent = 'Redirigiendo a login...';
-          setTimeout(() => {
-            window.location.href = 'login.html';
-          }, 800);
+          setTimeout(() => { window.location.href = 'login.html'; }, 1000);
           return;
         }
         msg.textContent = '';
+        main();
       });
     }
-    checkAccess();
 
     const adminEmail = "sergiosfmtc@gmail.com";
-    const usuario = JSON.parse(localStorage.getItem('usuarioForo'));
     const warning = document.getElementById('admin-warning');
     const lista = document.getElementById('usuarios-lista');
 
-    if (!usuario || usuario.email !== adminEmail) {
-      warning.classList.remove('hidden');
-      lista.innerHTML = '<div class="text-center text-gray-500">No tienes permiso para ver esta página.</div>';
-      throw new Error('Acceso denegado');
-    }
-
-    async function cargarUsuarios() {
-      const snap = await getDocs(collection(db, 'usuarios'));
-      if (snap.empty) {
-        lista.innerHTML = '<div class="text-center text-gray-500">No hay usuarios registrados.</div>';
-        return;
+    function main() {
+      if (!usuario || usuario.email !== adminEmail) {
+        warning.classList.remove('hidden');
+        lista.innerHTML = '<div class="text-center text-gray-500">No tienes permiso para ver esta página.</div>';
+        throw new Error('Acceso denegado');
       }
-      let html = `<table class='w-full text-left border border-gray-200 rounded'><thead><tr><th class='p-2 border-b'>Nombre</th><th class='p-2 border-b'>Email</th><th class='p-2 border-b'>Tipo</th><th class='p-2 border-b'>Fecha</th></tr></thead><tbody>`;
-      snap.forEach(doc => {
-        const u = doc.data();
-        html += `<tr><td class='p-2 border-b'>${u.nombre || ''}</td><td class='p-2 border-b'>${u.email || '-'}</td><td class='p-2 border-b'>${u.tipo}</td><td class='p-2 border-b text-xs'>${u.fecha ? new Date(u.fecha).toLocaleString() : '-'}</td></tr>`;
-      });
-      html += '</tbody></table>';
-      lista.innerHTML = html;
+
+      async function cargarUsuarios() {
+        const snap = await getDocs(collection(db, 'usuarios'));
+        if (snap.empty) {
+          lista.innerHTML = '<div class="text-center text-gray-500">No hay usuarios registrados.</div>';
+          return;
+        }
+        let html = `<table class='w-full text-left border border-gray-200 rounded'><thead><tr><th class='p-2 border-b'>Nombre</th><th class='p-2 border-b'>Email</th><th class='p-2 border-b'>Tipo</th><th class='p-2 border-b'>Fecha</th></tr></thead><tbody>`;
+        snap.forEach(doc => {
+          const u = doc.data();
+          html += `<tr><td class='p-2 border-b'>${u.nombre || ''}</td><td class='p-2 border-b'>${u.email || '-'}</td><td class='p-2 border-b'>${u.tipo}</td><td class='p-2 border-b text-xs'>${u.fecha ? new Date(u.fecha).toLocaleString() : '-'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        lista.innerHTML = html;
+      }
+      cargarUsuarios();
     }
-    cargarUsuarios();
+    start();
   </script>
 </body>
 </html>
